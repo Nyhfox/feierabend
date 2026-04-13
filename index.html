@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FEIERABEND ADAPTIVE SYSTEM 2.0</title>
+  <style>
+    :root { --bg1:#050510; }
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      height:100vh;
+      overflow:hidden;
+      background:radial-gradient(circle at 50% 50%, #111, var(--bg1));
+      font-family:system-ui,sans-serif;
+      color:white;
+    }
+
+    canvas{position:absolute;inset:0}
+
+    #ui{
+      position:absolute;
+      inset:0;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      z-index:10;
+      pointer-events:none;
+      mix-blend-mode:screen;
+    }
+
+    h1,#timer{
+      font-weight:900;
+      letter-spacing:.25em;
+      text-transform:uppercase;
+      animation:rgb 1.2s linear infinite;
+    }
+
+    h1{
+      font-size:2.6rem;
+      text-shadow:0 0 20px red,0 0 40px blue,0 0 80px lime;
+    }
+
+    #timer{
+      font-size:5.5rem;
+      font-family:monospace;
+      text-shadow:0 0 10px cyan,0 0 20px magenta,0 0 40px yellow;
+    }
+
+    .sub{
+      opacity:.7;
+      letter-spacing:.3em;
+      margin-top:1rem;
+      animation:flicker 2s infinite;
+    }
+
+    @keyframes flicker{0%,100%{opacity:1}50%{opacity:.2}}
+    @keyframes rgb{0%{filter:hue-rotate(0deg)}100%{filter:hue-rotate(360deg)}}
+
+    .feier{
+      font-size:6rem;
+      animation:boom .35s infinite alternate;
+      text-shadow:0 0 60px red,0 0 120px blue,0 0 180px lime;
+    }
+
+    @keyframes boom{0%{transform:scale(1) rotate(-3deg)}100%{transform:scale(1.6) rotate(3deg)}}
+
+    .glitch{animation:glitch .08s infinite}
+
+    @keyframes glitch{
+      0%{transform:translate(0)}
+      25%{transform:translate(-3px,2px)}
+      50%{transform:translate(3px,-2px)}
+      75%{transform:translate(-2px,1px)}
+      100%{transform:translate(0)}
+    }
+
+    .flash{
+      position:fixed;
+      inset:0;
+      background:white;
+      opacity:0;
+      animation:flash .8s ease-out;
+      z-index:999;
+      pointer-events:none;
+    }
+
+    @keyframes flash{0%{opacity:1}100%{opacity:0}}
+
+    .floating-text{
+      position:absolute;
+      font-weight:900;
+      text-transform:uppercase;
+      text-shadow:0 0 10px cyan,0 0 20px magenta;
+      animation:float 3s linear forwards;
+      pointer-events:none;
+    }
+
+    @keyframes float{0%{transform:translateY(0);opacity:1}100%{transform:translateY(-250px);opacity:0}}
+  </style>
+</head>
+<body>
+
+<canvas id="c"></canvas>
+
+<div id="ui">
+  <h1 id="title">COUNTDOWN TO FREEDOM</h1>
+  <div id="timer">00:00:00</div>
+  <div class="sub">ADAPTIVE SYSTEM ACTIVE</div>
+</div>
+
+<script>
+
+/* =========================
+   🔧 SINGLE SOURCE CONFIG
+========================= */
+const CONFIG = {
+  // weekday: 0(Sun) - 6(Sat)
+  schedule: {
+    1: {h:15,m:0},
+    2: {h:15,m:0},
+    3: {h:16,m:0},
+    4: {h:16,m:0},
+    5: {h:16,m:0}
+  },
+  defaultTime: {h:15,m:0}
+};
+
+/* ========================= */
+
+const canvas=document.getElementById("c");
+const ctx=canvas.getContext("2d");
+canvas.width=innerWidth;
+canvas.height=innerHeight;
+
+let boom=false;
+let triggeredKey=null;
+
+let particles=Array.from({length:240},()=>({
+  x:Math.random()*canvas.width,
+  y:Math.random()*canvas.height,
+  vx:(Math.random()-0.5)*3,
+  vy:(Math.random()-0.5)*3,
+  r:Math.random()*2+1
+}));
+
+let confetti=[];
+
+function getTodayKey(d){
+  return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();
+}
+
+function getTarget(now){
+  const day=now.getDay();
+  const t=CONFIG.schedule[day]||CONFIG.defaultTime;
+  const dt=new Date(now);
+  dt.setHours(t.h,t.m,0,0);
+  return dt;
+}
+
+function fmt(ms){
+  const s=Math.max(0,Math.floor(ms/1000));
+  return String(Math.floor(s/3600)).padStart(2,"0")+":"+
+         String(Math.floor((s%3600)/60)).padStart(2,"0")+":"+
+         String(s%60).padStart(2,"0");
+}
+
+const timer=document.getElementById("timer");
+const title=document.getElementById("title");
+
+function spawnFlash(){
+  const f=document.createElement("div");
+  f.className="flash";
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),800);
+}
+
+function spawnText(){
+  const msgs=["WORK","ERROR","COFFEE","FREE","ESCAPE","RELAX","SYSTEM"];
+  const el=document.createElement("div");
+  el.className="floating-text";
+  el.textContent=msgs[Math.random()*msgs.length|0];
+  el.style.left=Math.random()*innerWidth+"px";
+  el.style.top=Math.random()*innerHeight+"px";
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),3000);
+}
+
+function spawnConfetti(n=800){
+  for(let i=0;i<n;i++){
+    confetti.push({
+      x:canvas.width/2,
+      y:canvas.height/2,
+      vx:(Math.random()-0.5)*12,
+      vy:(Math.random()-0.5)*12,
+      g:0.06,
+      c:`hsl(${Math.random()*360},100%,60%)`,
+      a:1
+    });
+  }
+}
+
+function triggerFeier(){
+  boom=true;
+  spawnFlash();
+  spawnConfetti(1500);
+  spawnConfetti(1200);
+
+  document.body.classList.add("glitch");
+
+  title.textContent="FEIERABEND UNLOCKED";
+  title.classList.add("feier","glitch");
+  timer.textContent="YOU ARE FREE";
+
+  let i=0;
+  const loop=setInterval(()=>{
+    spawnConfetti(500);
+    spawnFlash();
+    if(++i>12) clearInterval(loop);
+  },400);
+}
+
+function draw(){
+  ctx.fillStyle="rgba(0,0,0,0.15)";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  for(let p of particles){
+    ctx.fillStyle=`hsl(${(p.x+p.y)%360},100%,70%)`;
+    ctx.globalAlpha=0.7;
+    ctx.beginPath();
+    ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    ctx.fill();
+
+    p.x+=p.vx;
+    p.y+=p.vy;
+
+    if(Math.random()<0.01) p.x=Math.random()*canvas.width;
+    if(p.x<0||p.x>canvas.width) p.vx*=-1;
+    if(p.y<0||p.y>canvas.height) p.vy*=-1;
+  }
+
+  for(let i=confetti.length-1;i>=0;i--){
+    let p=confetti[i];
+    ctx.globalAlpha=p.a;
+    ctx.fillStyle=p.c;
+    ctx.fillRect(p.x,p.y,5,5);
+    p.x+=p.vx;
+    p.y+=p.vy;
+    p.vy+=p.g;
+    p.a*=0.985;
+    if(p.a<0.05) confetti.splice(i,1);
+  }
+
+  ctx.globalAlpha=1;
+  requestAnimationFrame(draw);
+}
+
+draw();
+
+function tick(){
+  const now=new Date();
+  const target=getTarget(now);
+  const diff=target-now;
+
+  const key=getTodayKey(now)+"|"+target.getHours()+":"+target.getMinutes();
+
+  if(!boom && Math.random()<0.1) spawnText();
+
+  if(!boom && now>=target && triggeredKey!==key){
+    triggeredKey=key;
+    triggerFeier();
+  }
+
+  if(!boom){
+    timer.textContent=fmt(diff);
+    timer.style.transform=`translate(${Math.sin(Date.now()/30)*4}px,${Math.cos(Date.now()/30)*4}px)`;
+  }
+}
+
+setInterval(tick,60);
+tick();
+
+window.addEventListener("resize",()=>{
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
+});
+
+</script>
+</body>
+</html>
