@@ -1,10 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FEIERABEND SYSTEM</title>
+
+<style>
+body{
+  margin:0;
+  height:100vh;
+  background:#050510;
+  color:white;
+  font-family:system-ui;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+#title{
+  font-size:1.6rem;
+  margin-bottom:10px;
+  opacity:0.9;
+}
+
+#timer{
+  font-size:3rem;
+  font-family:monospace;
+  font-weight:800;
+}
+</style>
+</head>
+
+<body>
+
+<div>
+  <div id="title">Loading timetable...</div>
+  <div id="timer">--:--:--</div>
+</div>
+
 <script>
 
 const API_URL = "https://backenduntis.onrender.com/api/timetable";
 
 let cache = null;
 
-// ---------------- FETCH (slow, stable) ----------------
+// ---------------- FETCH DATA ----------------
 async function load(){
   try {
     cache = await fetch(API_URL).then(r => r.json());
@@ -22,6 +63,7 @@ function nowMinutes(){
   return d.getHours()*60 + d.getMinutes();
 }
 
+// ---------------- FORMAT ----------------
 function fmt(ms){
   const s = Math.max(0, Math.floor(ms/1000));
   return String(Math.floor(s/3600)).padStart(2,"0") + ":" +
@@ -29,32 +71,35 @@ function fmt(ms){
          String(s%60).padStart(2,"0");
 }
 
-// ---------------- CORE LOGIC ----------------
-function getCurrentLesson(now, lessons){
+// ---------------- LESSON LOGIC ----------------
+function getCurrent(now, lessons){
   return lessons.find(l => now >= l.startMin && now < l.endMin);
 }
 
-function getNextLesson(now, lessons){
+function getNext(now, lessons){
   return lessons.find(l => l.startMin > now);
 }
 
-// ---------------- UI LOOP ----------------
+// ---------------- MAIN LOOP ----------------
 function tick(){
 
-  if(!cache) return;
+  if(!cache || !cache.lessons) return;
 
-  const now = nowMinutes();
   const lessons = cache.lessons;
+  const now = nowMinutes();
 
-  const current = getCurrentLesson(now, lessons);
-  const next = getNextLesson(now, lessons);
+  const current = getCurrent(now, lessons);
+  const next = getNext(now, lessons);
 
   const endOfDay = 16 * 60;
 
   const title = document.getElementById("title");
   const timer = document.getElementById("timer");
 
-  // ---------------- CURRENT LESSON ----------------
+  // safety guard (prevents crashes)
+  if(!title || !timer) return;
+
+  // ---------------- TITLE ----------------
   if(current){
     title.innerText =
       `NOW: ${current.subject} | Room ${current.room}` +
@@ -69,10 +114,9 @@ function tick(){
     title.innerText = "NO MORE LESSONS 🎉";
   }
 
-  // ---------------- NEXT LESSON TIMER ----------------
+  // ---------------- TIMER ----------------
   if(next){
     const toNext = (next.startMin - now) * 60000;
-
     const toFree = (endOfDay - now) * 60000;
 
     timer.innerHTML =
@@ -81,12 +125,13 @@ function tick(){
 
   } else {
     const free = (endOfDay - now) * 60000;
-
-    timer.innerHTML =
-      `🏁 FREE TIME: ${fmt(free)}`;
+    timer.innerText = `🏁 FREE: ${fmt(free)}`;
   }
 }
 
 setInterval(tick, 1000);
 
 </script>
+
+</body>
+</html>
