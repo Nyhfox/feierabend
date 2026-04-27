@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FEIERABEND SYSTEM 3.0</title>
+<title>FEIERABEND SYSTEM</title>
 
 <style>
 body{
@@ -11,46 +11,44 @@ body{
   height:100vh;
   background:#050510;
   color:white;
-  font-family:system-ui;
   display:flex;
   align-items:center;
   justify-content:center;
   text-align:center;
+  font-family:system-ui;
 }
 
-#timer{
-  font-size:4rem;
-  font-family:monospace;
-  font-weight:900;
-}
-
-#title{
-  font-size:2rem;
-  opacity:.8;
-  margin-bottom:1rem;
-}
+#title{font-size:1.5rem; opacity:.8;}
+#timer{font-size:4rem; font-family:monospace; font-weight:900;}
 </style>
 </head>
 
 <body>
 
 <div>
-  <div id="title">Loading timetable...</div>
+  <div id="title">Loading...</div>
   <div id="timer">--:--:--</div>
 </div>
 
 <script>
 
-const API_URL = "https://backenduntis.onrender.com/api/timetable";
+const API_URL = "https://YOUR-RENDER-SERVICE.onrender.com/api/timetable";
 
-// format minutes → HH:MM
-function fmtMin(min){
-  const h = String(Math.floor(min/60)).padStart(2,"0");
-  const m = String(min%60).padStart(2,"0");
-  return `${h}:${m}`;
+let cache = null;
+
+// ---------------- FETCH every 30s ONLY ----------------
+async function load(){
+  try {
+    cache = await fetch(API_URL).then(r => r.json());
+  } catch(e){
+    console.log("API error", e);
+  }
 }
 
-// ms → HH:MM:SS
+setInterval(load, 30000);
+load();
+
+// ---------------- FORMAT ----------------
 function fmt(ms){
   const s = Math.max(0, Math.floor(ms/1000));
   return String(Math.floor(s/3600)).padStart(2,"0") + ":" +
@@ -58,52 +56,42 @@ function fmt(ms){
          String(s%60).padStart(2,"0");
 }
 
-async function load(){
-  const res = await fetch(API_URL);
-  return await res.json();
-}
+// ---------------- UI UPDATE (every second) ----------------
+function tick(){
 
-async function tick(){
+  if(!cache) return;
 
-  const data = await load();
-
-  const now = data.now;
-  const next = data.next;
+  const now = cache.now;
+  const next = cache.next;
 
   const endOfDay = 16 * 60;
 
   const title = document.getElementById("title");
   const timer = document.getElementById("timer");
 
-  // --------------------------
-  // NO MORE LESSONS
-  // --------------------------
+  // real current time (fix drift)
+  const realNow = new Date();
+  const currentMin = realNow.getHours()*60 + realNow.getMinutes();
+
   if(!next){
-    const freeMs = (endOfDay - now) * 60 * 1000;
+    const free = (endOfDay - currentMin) * 60000;
 
     title.innerText = "NO MORE LESSONS 🎉";
-    timer.innerText = fmt(freeMs);
+    timer.innerText = fmt(free);
     return;
   }
 
-  const nextStart = next.startMin;
+  const toNext = (next.startMin - currentMin) * 60000;
+  const toFree = (endOfDay - currentMin) * 60000;
 
-  const timeToNext = (nextStart - now) * 60 * 1000;
-  const timeToFreedom = (endOfDay - now) * 60 * 1000;
-
-  title.innerHTML =
-    `Next: ${next.subject} (${fmtMin(next.startMin)})<br>` +
-    `Room: ${next.room}`;
+  title.innerText = `Next: ${next.subject} | Room ${next.room}`;
 
   timer.innerHTML =
-    `⏳ Next lesson: ${fmt(timeToNext)}<br>` +
-    `🏁 Freedom: ${fmt(timeToFreedom)}`;
-
+    `⏳ Next: ${fmt(toNext)}<br>` +
+    `🏁 Freedom: ${fmt(toFree)}`;
 }
 
 setInterval(tick, 1000);
-tick();
-
 </script>
 
 </body>
