@@ -858,6 +858,139 @@
             margin-top: 1rem;
         }
 
+        .school-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(0, 245, 212, 0.1);
+            border: 1px solid rgba(0, 245, 212, 0.3);
+            color: var(--accent-primary);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        .week-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(123, 44, 191, 0.1);
+            border: 1px solid rgba(123, 44, 191, 0.3);
+            color: var(--accent-secondary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-left: 0.5rem;
+        }
+
+        /* Minecraft Parkour Section */
+        .parkour-section {
+            margin-top: 2rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .parkour-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .parkour-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .parkour-badge {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #000;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            animation: badgePulse 2s infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(74, 222, 128, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(74, 222, 128, 0.8); }
+        }
+
+        .parkour-subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .video-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, transparent 60%, rgba(0,0,0,0.8) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .adhd-text {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            right: 1rem;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .adhd-text svg {
+            width: 14px;
+            height: 14px;
+            animation: sparkle 1.5s ease-in-out infinite;
+        }
+
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
         /* Status indicator */
         .status-indicator {
             display: flex;
@@ -987,12 +1120,22 @@
                     <div class="feierabend-time" id="feierabendInfo">
                         Feierabend at <span id="feierabendTime">--:--</span>
                     </div>
-                    <div id="workModeBadge" class="work-mode-badge" style="display: none;">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-                        </svg>
-                        Work Day Mode - No lessons today
+                    <div id="dayTypeBadges" style="text-align: center;">
+                        <div id="workModeBadge" class="work-mode-badge" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                            </svg>
+                            Work Day Mode
+                        </div>
+                        <div id="schoolModeBadge" class="school-mode-badge" style="display: none;">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
+                                <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
+                            </svg>
+                            School Day
+                        </div>
+                        <span id="weekIndicator" class="week-indicator" style="display: none;"></span>
                     </div>
                     <div class="progress-section">
                         <div class="progress-label">
@@ -1075,6 +1218,34 @@
                 <div class="cancelled-list" id="cancelledList"></div>
             </section>
 
+            <!-- Minecraft Parkour for ADHD -->
+            <section class="parkour-section">
+                <div class="parkour-header">
+                    <div class="parkour-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                        Background Entertainment
+                        <span class="parkour-badge">ADHD Mode</span>
+                    </div>
+                    <div class="parkour-subtitle">Minecraft parkour to keep you sane while waiting</div>
+                </div>
+                <div class="video-container">
+                    <iframe 
+                        src="https://www.youtube.com/embed/n_Dv4JMiwK8?autoplay=1&mute=1&loop=1&playlist=n_Dv4JMiwK8&controls=0&showinfo=0&rel=0&modestbranding=1" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>
+                    </iframe>
+                    <div class="video-overlay"></div>
+                    <div class="adhd-text">
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                        </svg>
+                        <span>Satisfying parkour to keep your brain occupied</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Full Schedule -->
             <section class="schedule-section">
                 <div class="schedule-header">
@@ -1100,6 +1271,72 @@
         let timetableData = null;
         let isFeierabend = false;
         let celebrationTriggered = false;
+
+        // ============================================
+        // SCHOOL DAY LOGIC
+        // Even weeks: Monday (1) and Tuesday (2)
+        // Odd weeks: Only Tuesday (2)
+        // ============================================
+
+        function getWeekNumber(date) {
+            const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+            const dayNum = d.getUTCDay() || 7;
+            d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+        }
+
+        function isEvenWeek() {
+            const weekNum = getWeekNumber(new Date());
+            return weekNum % 2 === 0;
+        }
+
+        function isSchoolDay() {
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, 2 = Tuesday, etc.
+            const evenWeek = isEvenWeek();
+
+            // Even weeks: Monday (1) and Tuesday (2) are school days
+            // Odd weeks: Only Tuesday (2) is a school day
+            if (evenWeek) {
+                return dayOfWeek === 1 || dayOfWeek === 2; // Monday or Tuesday
+            } else {
+                return dayOfWeek === 2; // Only Tuesday
+            }
+        }
+
+        function isWorkDay() {
+            // Work days are weekdays that are NOT school days
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            
+            // Weekend is never a work day
+            if (dayOfWeek === 0 || dayOfWeek === 6) {
+                return false;
+            }
+            
+            // If it's not a school day but it's a weekday, it's a work day
+            return !isSchoolDay();
+        }
+
+        function getDayTypeInfo() {
+            const today = new Date();
+            const dayOfWeek = today.getDay();
+            const evenWeek = isEvenWeek();
+            const weekNum = getWeekNumber(today);
+            const schoolDay = isSchoolDay();
+            const workDay = isWorkDay();
+            const weekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+            return {
+                isSchoolDay: schoolDay,
+                isWorkDay: workDay,
+                isWeekend: weekend,
+                isEvenWeek: evenWeek,
+                weekNumber: weekNum,
+                dayOfWeek: dayOfWeek
+            };
+        }
 
         // ============================================
         // UTILITY FUNCTIONS
