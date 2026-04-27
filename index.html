@@ -38,14 +38,13 @@ body{
   <div id="title">Loading timetable...</div>
   <div id="timer">--:--:--</div>
 </div>
-
-<script>
+  <script>
 
 const API_URL = "https://backenduntis.onrender.com/api/timetable";
 
 let cache = null;
 
-// ---------------- FETCH DATA ----------------
+// ---------------- FETCH ----------------
 async function load(){
   try {
     cache = await fetch(API_URL).then(r => r.json());
@@ -57,18 +56,22 @@ async function load(){
 setInterval(load, 30000);
 load();
 
-// ---------------- TIME ----------------
+// ---------------- REAL TIME (WITH SECONDS) ----------------
 function nowMinutes(){
   const d = new Date();
-  return d.getHours()*60 + d.getMinutes();
+  return d.getHours()*60 + d.getMinutes() + d.getSeconds()/60;
 }
 
-// ---------------- FORMAT ----------------
+// ---------------- FORMAT (accurate seconds) ----------------
 function fmt(ms){
-  const s = Math.max(0, Math.floor(ms/1000));
-  return String(Math.floor(s/3600)).padStart(2,"0") + ":" +
-         String(Math.floor((s%3600)/60)).padStart(2,"0") + ":" +
-         String(s%60).padStart(2,"0");
+  const total = Math.max(0, Math.floor(ms/1000));
+  const h = Math.floor(total/3600);
+  const m = Math.floor((total%3600)/60);
+  const s = total%60;
+
+  return `${String(h).padStart(2,"0")}:` +
+         `${String(m).padStart(2,"0")}:` +
+         `${String(s).padStart(2,"0")}`;
 }
 
 // ---------------- LESSON LOGIC ----------------
@@ -80,7 +83,22 @@ function getNext(now, lessons){
   return lessons.find(l => l.startMin > now);
 }
 
-// ---------------- MAIN LOOP ----------------
+// ---------------- FEIERABEND LOGIC ----------------
+function getFeierabend(lessons){
+  if(!lessons || lessons.length === 0) return 16 * 60;
+
+  let last = 16 * 60;
+
+  for(const l of lessons){
+    if(!l.cancelled){
+      last = Math.max(last, l.endMin);
+    }
+  }
+
+  return last;
+}
+
+// ---------------- MAIN ----------------
 function tick(){
 
   if(!cache || !cache.lessons) return;
@@ -91,12 +109,11 @@ function tick(){
   const current = getCurrent(now, lessons);
   const next = getNext(now, lessons);
 
-  const endOfDay = 16 * 60;
+  const feier = getFeierabend(lessons);
 
   const title = document.getElementById("title");
   const timer = document.getElementById("timer");
 
-  // safety guard (prevents crashes)
   if(!title || !timer) return;
 
   // ---------------- TITLE ----------------
@@ -114,18 +131,19 @@ function tick(){
     title.innerText = "NO MORE LESSONS 🎉";
   }
 
-  // ---------------- TIMER ----------------
+  // ---------------- TIMERS ----------------
   if(next){
     const toNext = (next.startMin - now) * 60000;
-    const toFree = (endOfDay - now) * 60000;
+    const toFree = (feier - now) * 60000;
 
     timer.innerHTML =
+      `📍 Next room: ${next.room}<br>` +
       `⏳ Next lesson: ${fmt(toNext)}<br>` +
       `🏁 Feierabend: ${fmt(toFree)}`;
 
   } else {
-    const free = (endOfDay - now) * 60000;
-    timer.innerText = `🏁 FREE: ${fmt(free)}`;
+    const free = (16*60 - now) * 60000;
+    timer.innerHTML = `🏁 FREE: ${fmt(free)}`;
   }
 }
 
