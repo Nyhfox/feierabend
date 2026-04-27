@@ -1,187 +1,1510 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FEIERABEND SYSTEM</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FEIERABEND TIMER</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a25;
+            --accent-primary: #00f5d4;
+            --accent-secondary: #7b2cbf;
+            --accent-warning: #ff6b35;
+            --accent-danger: #ef233c;
+            --accent-success: #06d6a0;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --text-muted: #6b6b7b;
+            --glow-cyan: 0 0 30px rgba(0, 245, 212, 0.5);
+            --glow-purple: 0 0 30px rgba(123, 44, 191, 0.5);
+        }
 
-<style>
-body{
-  margin:0;
-  height:100vh;
-  background:#050510;
-  color:white;
-  font-family:system-ui;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-#wrap{
-  text-align:center;
-  max-width:90vw;
-}
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
 
-#title{
-  font-size:1.4rem;
-  margin-bottom:10px;
-  line-height:1.5;
-}
+        /* Animated Background */
+        .bg-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 245, 212, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 212, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
 
-#cancelled{
-  font-size:0.9rem;
-  opacity:0.7;
-  margin-bottom:10px;
-  color:#ff5c5c;
-}
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
 
-#timer{
-  font-size:3rem;
-  font-family:monospace;
-  font-weight:800;
-}
-</style>
+        .bg-orbs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: orbFloat 15s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--accent-secondary);
+            top: -200px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--accent-primary);
+            bottom: -150px;
+            right: -100px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--accent-warning);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(50px, -30px) scale(1.1); }
+            50% { transform: translate(-30px, 50px) scale(0.9); }
+            75% { transform: translate(-50px, -20px) scale(1.05); }
+        }
+
+        /* Scanlines */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1) 0px,
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            opacity: 0.3;
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 6vw, 4rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            display: inline-block;
+            animation: titleGlow 3s ease-in-out infinite;
+        }
+
+        .header h1::before {
+            content: attr(data-text);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            filter: blur(20px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 245, 212, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(123, 44, 191, 0.8)); }
+        }
+
+        .current-time {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            letter-spacing: 0.3em;
+        }
+
+        .current-time span {
+            color: var(--accent-primary);
+            text-shadow: 0 0 10px var(--accent-primary);
+        }
+
+        /* Timer Section */
+        .timer-section {
+            margin-bottom: 3rem;
+        }
+
+        .timer-container {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 245, 212, 0.2);
+            border-radius: 24px;
+            padding: 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timer-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-primary), var(--accent-secondary), transparent);
+            animation: borderFlow 3s linear infinite;
+        }
+
+        @keyframes borderFlow {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .timer-label {
+            text-align: center;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3em;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+        }
+
+        .timer-display {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 100px;
+        }
+
+        .timer-value {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 10vw, 6rem);
+            font-weight: 900;
+            background: linear-gradient(180deg, var(--text-primary), var(--text-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1;
+            position: relative;
+        }
+
+        .timer-value::after {
+            content: attr(data-value);
+            position: absolute;
+            top: 0;
+            left: 0;
+            color: var(--accent-primary);
+            filter: blur(10px);
+            opacity: 0.5;
+            z-index: -1;
+        }
+
+        .timer-unit-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .timer-separator {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(2rem, 8vw, 4rem);
+            color: var(--accent-primary);
+            animation: blink 1s step-end infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .feierabend-time {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .feierabend-time span {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+
+        /* Progress Bar */
+        .progress-section {
+            margin-top: 2rem;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-secondary);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 4px;
+            transition: width 1s ease-out;
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: var(--accent-primary);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon.current {
+            background: rgba(0, 245, 212, 0.1);
+            color: var(--accent-primary);
+            box-shadow: 0 0 20px rgba(0, 245, 212, 0.2);
+        }
+
+        .card-icon.next {
+            background: rgba(123, 44, 191, 0.1);
+            color: var(--accent-secondary);
+            box-shadow: 0 0 20px rgba(123, 44, 191, 0.2);
+        }
+
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subject {
+            font-family: 'Orbitron', monospace;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-subject.current {
+            color: var(--accent-primary);
+            text-shadow: 0 0 20px rgba(0, 245, 212, 0.5);
+        }
+
+        .card-subject.next {
+            color: var(--accent-secondary);
+            text-shadow: 0 0 20px rgba(123, 44, 191, 0.5);
+        }
+
+        .card-details {
+            display: flex;
+            gap: 1.5rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .card-detail {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-detail svg {
+            width: 16px;
+            height: 16px;
+            opacity: 0.7;
+        }
+
+        .lesson-progress {
+            margin-top: 1rem;
+            height: 4px;
+            background: var(--bg-secondary);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .lesson-progress-fill {
+            height: 100%;
+            background: var(--accent-primary);
+            border-radius: 2px;
+            transition: width 1s linear;
+        }
+
+        /* No Lesson State */
+        .no-lesson {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+        }
+
+        .no-lesson-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Cancelled Lessons */
+        .cancelled-section {
+            background: var(--bg-card);
+            border: 1px solid rgba(239, 35, 60, 0.2);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .cancelled-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .cancelled-badge {
+            background: rgba(239, 35, 60, 0.1);
+            color: var(--accent-danger);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .cancelled-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .cancelled-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .cancelled-item {
+            background: rgba(239, 35, 60, 0.05);
+            border: 1px solid rgba(239, 35, 60, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .cancelled-item::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: var(--accent-danger);
+            opacity: 0.3;
+        }
+
+        .cancelled-subject {
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            color: var(--accent-danger);
+            opacity: 0.7;
+        }
+
+        .cancelled-time {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Schedule Timeline */
+        .schedule-section {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+
+        .schedule-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .schedule-title {
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .schedule-count {
+            background: rgba(0, 245, 212, 0.1);
+            color: var(--accent-primary);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .schedule-timeline {
+            position: relative;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent-primary), var(--accent-secondary));
+            opacity: 0.3;
+        }
+
+        .schedule-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem 0;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .schedule-item:hover {
+            background: rgba(255, 255, 255, 0.02);
+            margin: 0 -1rem;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+
+        .schedule-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--bg-card);
+            border: 2px solid var(--text-muted);
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
+
+        .schedule-item.active .schedule-dot {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 15px var(--accent-primary);
+            animation: pulse 2s infinite;
+        }
+
+        .schedule-item.cancelled .schedule-dot {
+            background: var(--accent-danger);
+            border-color: var(--accent-danger);
+            opacity: 0.5;
+        }
+
+        .schedule-item.past .schedule-dot {
+            background: var(--text-muted);
+            border-color: var(--text-muted);
+            opacity: 0.3;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 15px var(--accent-primary); }
+            50% { box-shadow: 0 0 30px var(--accent-primary), 0 0 50px var(--accent-primary); }
+        }
+
+        .schedule-content {
+            flex: 1;
+        }
+
+        .schedule-subject {
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .schedule-item.active .schedule-subject {
+            color: var(--accent-primary);
+        }
+
+        .schedule-item.cancelled .schedule-subject {
+            color: var(--accent-danger);
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .schedule-item.past .schedule-subject {
+            color: var(--text-muted);
+        }
+
+        .schedule-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .schedule-time {
+            font-family: 'Orbitron', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            min-width: 100px;
+            text-align: right;
+        }
+
+        /* Loading State */
+        .loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            gap: 2rem;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 3px solid var(--bg-secondary);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.2em;
+            animation: loadingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes loadingPulse {
+            0%, 100% { opacity: 0.5; }
+            50% { opacity: 1; }
+        }
+
+        /* Error State */
+        .error {
+            text-align: center;
+            padding: 3rem;
+            color: var(--accent-danger);
+        }
+
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .error-message {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .retry-btn {
+            background: var(--accent-danger);
+            color: white;
+            border: none;
+            padding: 0.75rem 2rem;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .retry-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(239, 35, 60, 0.5);
+        }
+
+        /* FEIERABEND CELEBRATION */
+        .celebration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .celebration-overlay.active {
+            display: flex;
+            animation: overlayIn 0.5s ease-out;
+        }
+
+        @keyframes overlayIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .celebration-text {
+            font-family: 'Orbitron', monospace;
+            font-size: clamp(3rem, 15vw, 10rem);
+            font-weight: 900;
+            text-transform: uppercase;
+            background: linear-gradient(45deg, #ff006e, #fb5607, #ffbe0b, #06d6a0, #118ab2, #7b2cbf);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbowText 2s ease infinite, textBounce 0.5s ease infinite;
+            text-shadow: none;
+        }
+
+        @keyframes rainbowText {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        @keyframes textBounce {
+            0%, 100% { transform: scale(1) rotate(-2deg); }
+            50% { transform: scale(1.05) rotate(2deg); }
+        }
+
+        .celebration-subtitle {
+            font-size: clamp(1rem, 4vw, 2rem);
+            color: white;
+            margin-top: 2rem;
+            animation: subtitlePulse 1s ease-in-out infinite;
+        }
+
+        @keyframes subtitlePulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(0.98); }
+        }
+
+        .party-emojis {
+            position: fixed;
+            font-size: 3rem;
+            animation: floatUp 3s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { 
+                transform: translateY(100vh) rotate(0deg);
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(-100vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        .firework {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: firework 1s ease-out forwards;
+            pointer-events: none;
+        }
+
+        @keyframes firework {
+            0% { transform: scale(0); opacity: 1; }
+            50% { transform: scale(20); opacity: 0.8; }
+            100% { transform: scale(40); opacity: 0; }
+        }
+
+        /* Work Day Mode */
+        .work-mode-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(255, 107, 53, 0.1);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            color: var(--accent-warning);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        /* Status indicator */
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            animation: statusPulse 2s infinite;
+        }
+
+        @keyframes statusPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .timer-container {
+                padding: 2rem 1rem;
+            }
+
+            .timer-display {
+                gap: 0.5rem;
+            }
+
+            .timer-unit {
+                min-width: 60px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glitch effect for celebration */
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+    </style>
 </head>
-
 <body>
+    <!-- Background Effects -->
+    <div class="bg-grid"></div>
+    <div class="bg-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="scanlines"></div>
 
-<div id="wrap">
-  <div id="title">Loading timetable...</div>
-  <div id="cancelled"></div>
-  <div id="timer">--:--:--</div>
-</div>
+    <!-- Celebration Overlay -->
+    <div class="celebration-overlay" id="celebrationOverlay">
+        <div class="celebration-text" id="celebrationText">FEIERABEND!</div>
+        <div class="celebration-subtitle">Zeit zu gehen! Du hast es geschafft!</div>
+    </div>
 
-<script>
+    <!-- Main Container -->
+    <div class="container" id="mainContainer">
+        <!-- Loading State -->
+        <div class="loading" id="loadingState">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">INITIALIZING FEIERABEND SYSTEM...</div>
+        </div>
 
-const API_URL = "https://backenduntis.onrender.com/api/timetable";
+        <!-- Error State -->
+        <div class="error" id="errorState" style="display: none;">
+            <div class="error-icon">!</div>
+            <div class="error-message">Connection failed</div>
+            <button class="retry-btn" onclick="fetchTimetable()">RETRY</button>
+        </div>
 
-let cache = null;
+        <!-- Main Content -->
+        <div id="mainContent" style="display: none;">
+            <!-- Header -->
+            <header class="header">
+                <h1 data-text="FEIERABEND TIMER">FEIERABEND TIMER</h1>
+                <div class="current-time" id="currentTime">--:--:--</div>
+            </header>
 
-// ---------------- FETCH ----------------
-async function load(){
-  try {
-    cache = await fetch(API_URL).then(r => r.json());
-  } catch(e){
-    console.log("API error", e);
-  }
-}
+            <!-- Timer Section -->
+            <section class="timer-section">
+                <div class="timer-container">
+                    <div class="status-indicator">
+                        <div class="status-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                    <div class="timer-label" id="timerLabel">TIME UNTIL FEIERABEND</div>
+                    <div class="timer-display">
+                        <div class="timer-unit">
+                            <div class="timer-value" id="timerHours" data-value="00">00</div>
+                            <div class="timer-unit-label">Hours</div>
+                        </div>
+                        <div class="timer-separator">:</div>
+                        <div class="timer-unit">
+                            <div class="timer-value" id="timerMinutes" data-value="00">00</div>
+                            <div class="timer-unit-label">Minutes</div>
+                        </div>
+                        <div class="timer-separator">:</div>
+                        <div class="timer-unit">
+                            <div class="timer-value" id="timerSeconds" data-value="00">00</div>
+                            <div class="timer-unit-label">Seconds</div>
+                        </div>
+                    </div>
+                    <div class="feierabend-time" id="feierabendInfo">
+                        Feierabend at <span id="feierabendTime">--:--</span>
+                    </div>
+                    <div id="workModeBadge" class="work-mode-badge" style="display: none;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+                        </svg>
+                        Work Day Mode - No lessons today
+                    </div>
+                    <div class="progress-section">
+                        <div class="progress-label">
+                            <span>Day Progress</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="dayProgress" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-setInterval(load, 30000);
-load();
+            <!-- Current & Next Cards -->
+            <section class="cards-grid" id="cardsGrid">
+                <!-- Current Lesson Card -->
+                <div class="card" id="currentCard">
+                    <div class="card-icon current">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12,6 12,12 16,14"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-label">Currently in</div>
+                    <div class="card-subject current" id="currentSubject">--</div>
+                    <div class="card-details">
+                        <div class="card-detail">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            </svg>
+                            <span id="currentRoom">--</span>
+                        </div>
+                        <div class="card-detail">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12,6 12,12 16,14"></polyline>
+                            </svg>
+                            <span id="currentTime2">--:-- - --:--</span>
+                        </div>
+                    </div>
+                    <div class="lesson-progress">
+                        <div class="lesson-progress-fill" id="lessonProgress" style="width: 0%"></div>
+                    </div>
+                </div>
 
-// ---------------- TIME ----------------
-function nowMinutes(){
-  const d = new Date();
-  return d.getHours()*60 + d.getMinutes() + d.getSeconds()/60;
-}
+                <!-- Next Lesson Card -->
+                <div class="card" id="nextCard">
+                    <div class="card-icon next">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="13,17 18,12 13,7"></polyline>
+                            <polyline points="6,17 11,12 6,7"></polyline>
+                        </svg>
+                    </div>
+                    <div class="card-label">Next up</div>
+                    <div class="card-subject next" id="nextSubject">--</div>
+                    <div class="card-details">
+                        <div class="card-detail">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            </svg>
+                            <span id="nextRoom">--</span>
+                        </div>
+                        <div class="card-detail">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12,6 12,12 16,14"></polyline>
+                            </svg>
+                            <span id="nextTime">--:-- - --:--</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
 
-// ---------------- FORMAT ----------------
-function fmt(ms){
-  const total = Math.max(0, Math.floor(ms/1000));
-  const h = Math.floor(total/3600);
-  const m = Math.floor((total%3600)/60);
-  const s = total%60;
+            <!-- Cancelled Lessons -->
+            <section class="cancelled-section" id="cancelledSection" style="display: none;">
+                <div class="cancelled-header">
+                    <span class="cancelled-badge">Cancelled</span>
+                    <span class="cancelled-title" id="cancelledCount">0 lessons cancelled</span>
+                </div>
+                <div class="cancelled-list" id="cancelledList"></div>
+            </section>
 
-  return String(h).padStart(2,"0") + ":" +
-         String(m).padStart(2,"0") + ":" +
-         String(s).padStart(2,"0");
-}
+            <!-- Full Schedule -->
+            <section class="schedule-section">
+                <div class="schedule-header">
+                    <h2 class="schedule-title">Today's Schedule</h2>
+                    <span class="schedule-count" id="lessonCount">0 lessons</span>
+                </div>
+                <div class="schedule-timeline" id="scheduleTimeline">
+                    <div class="timeline-line"></div>
+                </div>
+            </section>
+        </div>
+    </div>
 
-// ---------------- CORE ----------------
-function getCurrent(now, lessons){
-  return lessons.find(l => now >= l.startMin && now < l.endMin);
-}
+    <script>
+        // ============================================
+        // FEIERABEND TIMER - OVERENGINEERED EDITION
+        // ============================================
 
-function getNext(now, lessons){
-  return lessons.find(l => l.startMin > now && !l.cancelled);
-}
+        const API_URL = 'https://backenduntis.onrender.com/api/timetable';
+        const WORK_DAY_END = 16 * 60; // 16:00 in minutes
+        const DAY_START = 8 * 60; // 8:00 for progress calculation
 
-function getCancelled(lessons){
-  return lessons.filter(l => l.cancelled);
-}
+        let timetableData = null;
+        let isFeierabend = false;
+        let celebrationTriggered = false;
 
-// ---------------- FIXED FEIERABEND ----------------
-function getFeierabend(lessons){
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
 
-  if(!lessons || lessons.length === 0){
-    return 16 * 60;
-  }
+        function minutesToTime(minutes) {
+            const hours = Math.floor(minutes / 60);
+            const mins = minutes % 60;
+            return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
+        }
 
-  const sorted = [...lessons].sort((a,b) => a.endMin - b.endMin);
+        function getCurrentMinutes() {
+            const now = new Date();
+            return now.getHours() * 60 + now.getMinutes();
+        }
 
-  let lastValid = null;
+        function getCurrentSeconds() {
+            return new Date().getSeconds();
+        }
 
-  for(const l of sorted){
-    if(!l.cancelled){
-      lastValid = l;
-    }
-  }
+        function getSecondsUntil(targetMinutes) {
+            const now = new Date();
+            const currentSeconds = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+            const targetSeconds = targetMinutes * 60;
+            return Math.max(0, targetSeconds - currentSeconds);
+        }
 
-  if(!lastValid){
-    return 16 * 60;
-  }
-  return lastValid.endMin;
-}
+        // ============================================
+        // TIMETABLE PROCESSING
+        // ============================================
 
+        function deduplicateLessons(lessons) {
+            const seen = new Map();
+            lessons.forEach(lesson => {
+                const key = `${lesson.subject}-${lesson.startMin}-${lesson.endMin}-${lesson.room}`;
+                if (!seen.has(key)) {
+                    seen.set(key, lesson);
+                }
+            });
+            return Array.from(seen.values()).sort((a, b) => a.startMin - b.startMin);
+        }
 
-// ---------------- MAIN ----------------
-function tick(){
+        function getFeierabendTime(lessons) {
+            if (!lessons || lessons.length === 0) {
+                return WORK_DAY_END;
+            }
 
-  if(!cache || !cache.lessons) return;
+            const nonCancelled = lessons.filter(l => !l.cancelled);
+            if (nonCancelled.length === 0) {
+                return WORK_DAY_END;
+            }
 
-  const lessons = cache.lessons;
-  const now = nowMinutes();
+            return Math.max(...nonCancelled.map(l => l.endMin));
+        }
 
-  const current = getCurrent(now, lessons);
-  const next = getNext(now, lessons);
-  const cancelled = getCancelled(lessons);
+        function getCurrentLesson(lessons, currentMin) {
+            if (!lessons) return null;
+            return lessons.find(l => !l.cancelled && currentMin >= l.startMin && currentMin < l.endMin);
+        }
 
-  const feier = getFeierabend(lessons);
+        function getNextLesson(lessons, currentMin) {
+            if (!lessons) return null;
+            return lessons.find(l => !l.cancelled && l.startMin > currentMin);
+        }
 
-  const title = document.getElementById("title");
-  const cancelBox = document.getElementById("cancelled");
-  const timer = document.getElementById("timer");
+        function getCancelledLessons(lessons) {
+            if (!lessons) return [];
+            return lessons.filter(l => l.cancelled);
+        }
 
-  if(!title || !timer || !cancelBox) return;
+        // ============================================
+        // UI UPDATE FUNCTIONS
+        // ============================================
 
-  // ---------------- CANCELLED LIST ----------------
-  cancelBox.innerText =
-    cancelled.length > 0
-      ? "Cancelled: " + cancelled.map(c => `${c.subject}@${c.room}`).join(" | ")
-      : "";
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            document.getElementById('currentTime').innerHTML = `Current Time: <span>${timeStr}</span>`;
+        }
 
-  // ---------------- TITLE ----------------
-  if(current){
-    title.innerText =
-      `NOW: ${current.subject} | Room ${current.room}`;
+        function updateTimer(feierabendMin) {
+            const secondsLeft = getSecondsUntil(feierabendMin);
+            
+            if (secondsLeft <= 0 && !celebrationTriggered) {
+                triggerCelebration();
+                return;
+            }
 
-  } else if(next){
-    title.innerText =
-      `NEXT: ${next.subject} | Room ${next.room}`;
+            const hours = Math.floor(secondsLeft / 3600);
+            const minutes = Math.floor((secondsLeft % 3600) / 60);
+            const seconds = secondsLeft % 60;
 
-  } else {
-    title.innerText = "NO MORE LESSONS 🎉";
-  }
+            const hoursEl = document.getElementById('timerHours');
+            const minutesEl = document.getElementById('timerMinutes');
+            const secondsEl = document.getElementById('timerSeconds');
 
-  // ---------------- TIMER ----------------
-  if(next){
-    const toNext = (next.startMin - now) * 60000;
-    const toFree = (feier - now) * 60000;
+            const hStr = hours.toString().padStart(2, '0');
+            const mStr = minutes.toString().padStart(2, '0');
+            const sStr = seconds.toString().padStart(2, '0');
 
-    timer.innerHTML =
-      `📍 Room: ${next.room}<br>` +
-      `⏳ Next: ${fmt(toNext)}<br>` +
-      `🏁 Feierabend: ${fmt(toFree)}`;
+            hoursEl.textContent = hStr;
+            hoursEl.dataset.value = hStr;
+            minutesEl.textContent = mStr;
+            minutesEl.dataset.value = mStr;
+            secondsEl.textContent = sStr;
+            secondsEl.dataset.value = sStr;
 
-  } else {
-    const free = (16*60 - now) * 60000;
-    timer.innerHTML = `🏁 FREE: ${fmt(free)}`;
-  }
-}
+            document.getElementById('feierabendTime').textContent = minutesToTime(feierabendMin);
+        }
 
-setInterval(tick, 1000);
+        function updateDayProgress(feierabendMin) {
+            const currentMin = getCurrentMinutes();
+            const dayLength = feierabendMin - DAY_START;
+            const elapsed = currentMin - DAY_START;
+            const progress = Math.min(100, Math.max(0, (elapsed / dayLength) * 100));
+            
+            document.getElementById('dayProgress').style.width = `${progress}%`;
+            document.getElementById('progressPercent').textContent = `${Math.round(progress)}%`;
+        }
 
-</script>
+        function updateCurrentLessonCard(lesson, currentMin) {
+            const card = document.getElementById('currentCard');
+            const subjectEl = document.getElementById('currentSubject');
+            const roomEl = document.getElementById('currentRoom');
+            const timeEl = document.getElementById('currentTime2');
+            const progressEl = document.getElementById('lessonProgress');
 
+            if (!lesson) {
+                subjectEl.textContent = 'Free Time';
+                roomEl.textContent = '--';
+                timeEl.textContent = '--:-- - --:--';
+                progressEl.style.width = '0%';
+                card.style.opacity = '0.5';
+            } else {
+                subjectEl.textContent = lesson.subject;
+                roomEl.textContent = `Room ${lesson.room}`;
+                timeEl.textContent = `${minutesToTime(lesson.startMin)} - ${minutesToTime(lesson.endMin)}`;
+                
+                const lessonLength = lesson.endMin - lesson.startMin;
+                const elapsed = currentMin - lesson.startMin;
+                const progress = Math.min(100, Math.max(0, (elapsed / lessonLength) * 100));
+                progressEl.style.width = `${progress}%`;
+                card.style.opacity = '1';
+            }
+        }
+
+        function updateNextLessonCard(lesson) {
+            const card = document.getElementById('nextCard');
+            const subjectEl = document.getElementById('nextSubject');
+            const roomEl = document.getElementById('nextRoom');
+            const timeEl = document.getElementById('nextTime');
+
+            if (!lesson) {
+                subjectEl.textContent = 'None';
+                roomEl.textContent = '--';
+                timeEl.textContent = '--:-- - --:--';
+                card.style.opacity = '0.5';
+            } else {
+                subjectEl.textContent = lesson.subject;
+                roomEl.textContent = `Room ${lesson.room}`;
+                timeEl.textContent = `${minutesToTime(lesson.startMin)} - ${minutesToTime(lesson.endMin)}`;
+                card.style.opacity = '1';
+            }
+        }
+
+        function updateCancelledSection(cancelled) {
+            const section = document.getElementById('cancelledSection');
+            const countEl = document.getElementById('cancelledCount');
+            const listEl = document.getElementById('cancelledList');
+
+            if (cancelled.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            countEl.textContent = `${cancelled.length} lesson${cancelled.length > 1 ? 's' : ''} cancelled`;
+            
+            listEl.innerHTML = cancelled.map(l => `
+                <div class="cancelled-item">
+                    <span class="cancelled-subject">${l.subject}</span>
+                    <span class="cancelled-time">${minutesToTime(l.startMin)} - ${minutesToTime(l.endMin)}</span>
+                </div>
+            `).join('');
+        }
+
+        function updateScheduleTimeline(lessons, currentMin) {
+            const timeline = document.getElementById('scheduleTimeline');
+            const countEl = document.getElementById('lessonCount');
+            
+            if (!lessons || lessons.length === 0) {
+                timeline.innerHTML = '<div class="timeline-line"></div><div class="no-lesson"><div class="no-lesson-icon">&#128564;</div>No lessons scheduled today</div>';
+                countEl.textContent = '0 lessons';
+                return;
+            }
+
+            countEl.textContent = `${lessons.length} lesson${lessons.length > 1 ? 's' : ''}`;
+            
+            timeline.innerHTML = '<div class="timeline-line"></div>' + lessons.map(lesson => {
+                let status = '';
+                if (lesson.cancelled) {
+                    status = 'cancelled';
+                } else if (currentMin >= lesson.startMin && currentMin < lesson.endMin) {
+                    status = 'active';
+                } else if (currentMin >= lesson.endMin) {
+                    status = 'past';
+                }
+
+                return `
+                    <div class="schedule-item ${status}">
+                        <div class="schedule-dot"></div>
+                        <div class="schedule-time">${minutesToTime(lesson.startMin)} - ${minutesToTime(lesson.endMin)}</div>
+                        <div class="schedule-content">
+                            <div class="schedule-subject">${lesson.subject}</div>
+                            <div class="schedule-meta">
+                                <span>Room ${lesson.room}</span>
+                                ${lesson.cancelled ? '<span style="color: var(--accent-danger);">CANCELLED</span>' : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateWorkModeIndicator(isWorkDay) {
+            const badge = document.getElementById('workModeBadge');
+            const label = document.getElementById('timerLabel');
+            
+            if (isWorkDay) {
+                badge.style.display = 'inline-flex';
+                label.textContent = 'TIME UNTIL WORK ENDS';
+            } else {
+                badge.style.display = 'none';
+                label.textContent = 'TIME UNTIL FEIERABEND';
+            }
+        }
+
+        // ============================================
+        // CELEBRATION EFFECTS
+        // ============================================
+
+        function triggerCelebration() {
+            if (celebrationTriggered) return;
+            celebrationTriggered = true;
+            isFeierabend = true;
+
+            // Show overlay
+            const overlay = document.getElementById('celebrationOverlay');
+            overlay.classList.add('active');
+
+            // Create confetti
+            createConfetti();
+
+            // Create fireworks
+            setInterval(createFirework, 500);
+
+            // Create floating emojis
+            setInterval(createFloatingEmoji, 300);
+
+            // Add glitch effect to main content
+            document.getElementById('mainContent').classList.add('glitch');
+
+            // Cycle celebration text
+            const texts = ['FEIERABEND!', 'FREEDOM!', 'FINALLY!', 'LETS GO!', 'PARTY TIME!'];
+            let textIndex = 0;
+            setInterval(() => {
+                textIndex = (textIndex + 1) % texts.length;
+                document.getElementById('celebrationText').textContent = texts[textIndex];
+            }, 1000);
+        }
+
+        function createConfetti() {
+            const colors = ['#ff006e', '#fb5607', '#ffbe0b', '#06d6a0', '#118ab2', '#7b2cbf'];
+            
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const confetti = document.createElement('div');
+                    confetti.style.cssText = `
+                        position: fixed;
+                        width: ${Math.random() * 10 + 5}px;
+                        height: ${Math.random() * 10 + 5}px;
+                        background: ${colors[Math.floor(Math.random() * colors.length)]};
+                        left: ${Math.random() * 100}vw;
+                        top: -20px;
+                        z-index: 10001;
+                        pointer-events: none;
+                        animation: confettiFall ${Math.random() * 3 + 2}s linear forwards;
+                        transform: rotate(${Math.random() * 360}deg);
+                    `;
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 5000);
+                }, i * 30);
+            }
+        }
+
+        function createFirework() {
+            const colors = ['#ff006e', '#fb5607', '#ffbe0b', '#06d6a0', '#118ab2', '#7b2cbf'];
+            const firework = document.createElement('div');
+            firework.className = 'firework';
+            firework.style.cssText = `
+                left: ${Math.random() * 100}vw;
+                top: ${Math.random() * 100}vh;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                z-index: 10001;
+            `;
+            document.body.appendChild(firework);
+            setTimeout(() => firework.remove(), 1000);
+        }
+
+        function createFloatingEmoji() {
+            const emojis = ['🎉', '🥳', '🎊', '🍺', '🎈', '✨', '🌟', '💃', '🕺', '🎆'];
+            const emoji = document.createElement('div');
+            emoji.className = 'party-emojis';
+            emoji.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+            emoji.style.left = `${Math.random() * 100}vw`;
+            emoji.style.zIndex = '10001';
+            document.body.appendChild(emoji);
+            setTimeout(() => emoji.remove(), 3000);
+        }
+
+        // Add confetti fall animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes confettiFall {
+                0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+                100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // ============================================
+        // DATA FETCHING
+        // ============================================
+
+        async function fetchTimetable() {
+            try {
+                document.getElementById('loadingState').style.display = 'flex';
+                document.getElementById('errorState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'none';
+
+                const response = await fetch(API_URL);
+                if (!response.ok) throw new Error('Failed to fetch');
+                
+                const data = await response.json();
+                timetableData = data;
+
+                // Deduplicate lessons
+                if (data.lessons) {
+                    timetableData.lessons = deduplicateLessons(data.lessons);
+                }
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+
+                updateUI();
+            } catch (error) {
+                console.error('Error fetching timetable:', error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
+        }
+
+        // ============================================
+        // MAIN UPDATE LOOP
+        // ============================================
+
+        function updateUI() {
+            if (!timetableData || isFeierabend) return;
+
+            const currentMin = getCurrentMinutes();
+            const lessons = timetableData.lessons || [];
+            const nonCancelledLessons = lessons.filter(l => !l.cancelled);
+            const isWorkDay = nonCancelledLessons.length === 0;
+
+            const feierabendMin = getFeierabendTime(lessons);
+            const currentLesson = getCurrentLesson(lessons, currentMin);
+            const nextLesson = getNextLesson(lessons, currentMin);
+            const cancelled = getCancelledLessons(lessons);
+
+            updateCurrentTime();
+            updateTimer(feierabendMin);
+            updateDayProgress(feierabendMin);
+            updateCurrentLessonCard(currentLesson, currentMin);
+            updateNextLessonCard(nextLesson);
+            updateCancelledSection(cancelled);
+            updateScheduleTimeline(lessons, currentMin);
+            updateWorkModeIndicator(isWorkDay);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        function init() {
+            fetchTimetable();
+            
+            // Update every second
+            setInterval(updateUI, 1000);
+            
+            // Refetch data every 5 minutes
+            setInterval(fetchTimetable, 5 * 60 * 1000);
+        }
+
+        // Start the app
+        init();
+    </script>
 </body>
 </html>
