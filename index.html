@@ -38,7 +38,8 @@ body{
   <div id="title">Loading timetable...</div>
   <div id="timer">--:--:--</div>
 </div>
-  <script>
+
+<script>
 
 const API_URL = "https://backenduntis.onrender.com/api/timetable";
 
@@ -56,22 +57,22 @@ async function load(){
 setInterval(load, 30000);
 load();
 
-// ---------------- REAL TIME (WITH SECONDS) ----------------
+// ---------------- TIME (WITH SECONDS) ----------------
 function nowMinutes(){
   const d = new Date();
   return d.getHours()*60 + d.getMinutes() + d.getSeconds()/60;
 }
 
-// ---------------- FORMAT (accurate seconds) ----------------
+// ---------------- FORMAT ----------------
 function fmt(ms){
   const total = Math.max(0, Math.floor(ms/1000));
   const h = Math.floor(total/3600);
   const m = Math.floor((total%3600)/60);
   const s = total%60;
 
-  return `${String(h).padStart(2,"0")}:` +
-         `${String(m).padStart(2,"0")}:` +
-         `${String(s).padStart(2,"0")}`;
+  return String(h).padStart(2,"0") + ":" +
+         String(m).padStart(2,"0") + ":" +
+         String(s).padStart(2,"0");
 }
 
 // ---------------- LESSON LOGIC ----------------
@@ -83,22 +84,37 @@ function getNext(now, lessons){
   return lessons.find(l => l.startMin > now);
 }
 
-// ---------------- FEIERABEND LOGIC ----------------
+// ---------------- FEIERABEND (FIXED) ----------------
 function getFeierabend(lessons){
-  if(!lessons || lessons.length === 0) return 16 * 60;
 
-  let last = 16 * 60;
+  if(!lessons || lessons.length === 0){
+    return 16 * 60;
+  }
 
-  for(const l of lessons){
+  const sorted = [...lessons].sort((a,b) => a.endMin - b.endMin);
+
+  let lastValid = null;
+
+  for(const l of sorted){
     if(!l.cancelled){
-      last = Math.max(last, l.endMin);
+      lastValid = l;
     }
   }
 
-  return last;
+  if(!lastValid){
+    return 16 * 60;
+  }
+
+  return lastValid.endMin;
 }
 
-// ---------------- MAIN ----------------
+// ---------------- LAST LESSON INFO ----------------
+function getLastLesson(lessons){
+  if(!lessons || lessons.length === 0) return null;
+  return [...lessons].sort((a,b)=>a.endMin-b.endMin).pop();
+}
+
+// ---------------- MAIN LOOP ----------------
 function tick(){
 
   if(!cache || !cache.lessons) return;
@@ -128,10 +144,15 @@ function tick(){
       (next.cancelled ? " ❌ CANCELLED" : "");
 
   } else {
-    title.innerText = "NO MORE LESSONS 🎉";
+    const last = getLastLesson(lessons);
+
+    title.innerText =
+      last && last.cancelled
+        ? "LAST LESSON WAS CANCELLED ❌"
+        : "NO MORE LESSONS 🎉";
   }
 
-  // ---------------- TIMERS ----------------
+  // ---------------- TIMER ----------------
   if(next){
     const toNext = (next.startMin - now) * 60000;
     const toFree = (feier - now) * 60000;
