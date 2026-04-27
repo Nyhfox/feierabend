@@ -101,25 +101,49 @@ function getCancelled(lessons){
 }
 
 // ---------------- FIXED FEIERABEND ----------------
-function getFeierabend(lessons){
+
+
+  function getFeierabend(lessons){
 
   if(!lessons || lessons.length === 0){
     return 16 * 60;
   }
 
-  // sort by end time descending
-  const sorted = [...lessons].sort((a,b)=>b.endMin-a.endMin);
+  const sorted = [...lessons].sort((a,b) => a.endMin - b.endMin);
 
-  // find last NON-cancelled lesson
+  let lastValid = null;
+
   for(const l of sorted){
     if(!l.cancelled){
-      return l.endMin;
+      lastValid = l;
     }
   }
 
-  // fallback
-  return 16 * 60;
+  if(!lastValid){
+    return 16 * 60;
+  }
+    function getFeierabend(lessons){
+
+  if(!lessons || lessons.length === 0){
+    return 16 * 60;
+  }
+
+  const sorted = [...lessons].sort((a,b) => a.endMin - b.endMin);
+
+  let lastValid = null;
+
+  for(const l of sorted){
+    if(!l.cancelled){
+      lastValid = l;
+    }
+  }
+
+  if(!lastValid){
+    return 16 * 60;
+  }
+ return lastValid.endMin;
 }
+
 
 // ---------------- MAIN ----------------
 function tick(){
