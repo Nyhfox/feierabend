@@ -991,6 +991,105 @@
             50% { opacity: 1; transform: scale(1.2); }
         }
 
+        /* Day Type Explanation Card */
+        .day-type-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .day-type-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .day-type-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .day-type-icon.school {
+            background: rgba(0, 245, 212, 0.1);
+        }
+
+        .day-type-icon.work {
+            background: rgba(255, 107, 53, 0.1);
+        }
+
+        .day-type-icon.weekend {
+            background: rgba(6, 214, 160, 0.1);
+        }
+
+        .day-type-title {
+            font-family: 'Orbitron', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .day-type-explanation {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .day-type-explanation strong {
+            color: var(--accent-primary);
+        }
+
+        .week-schedule {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .week-day {
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            background: var(--bg-secondary);
+            color: var(--text-muted);
+            border: 1px solid transparent;
+        }
+
+        .week-day.school {
+            background: rgba(0, 245, 212, 0.1);
+            color: var(--accent-primary);
+            border-color: rgba(0, 245, 212, 0.3);
+        }
+
+        .week-day.work {
+            background: rgba(255, 107, 53, 0.1);
+            color: var(--accent-warning);
+            border-color: rgba(255, 107, 53, 0.3);
+        }
+
+        .week-day.today {
+            box-shadow: 0 0 10px currentColor;
+            animation: todayPulse 2s infinite;
+        }
+
+        @keyframes todayPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .week-day.weekend {
+            background: rgba(6, 214, 160, 0.1);
+            color: var(--accent-success);
+            border-color: rgba(6, 214, 160, 0.3);
+        }
+
         /* Status indicator */
         .status-indicator {
             display: flex;
@@ -1052,9 +1151,50 @@
             80% { transform: translate(2px, -2px); }
             100% { transform: translate(0); }
         }
+
+        /* Debug Mode Banner */
+        .debug-banner {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(90deg, #ff6b35, #ef233c, #ff6b35);
+            background-size: 200% 100%;
+            animation: debugGradient 2s linear infinite;
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-family: 'Orbitron', monospace;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            z-index: 9999;
+            text-transform: uppercase;
+        }
+
+        @keyframes debugGradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        .debug-banner code {
+            background: rgba(0,0,0,0.3);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+
+        body.debug-mode {
+            padding-top: 36px;
+        }
     </style>
 </head>
 <body>
+    <!-- Debug Mode Banner -->
+    <div class="debug-banner" id="debugBanner" style="display: none;">
+        DEBUG MODE ACTIVE <code id="debugInfo"></code>
+    </div>
+
     <!-- Background Effects -->
     <div class="bg-grid"></div>
     <div class="bg-orbs">
@@ -1147,6 +1287,16 @@
                         </div>
                     </div>
                 </div>
+            </section>
+
+            <!-- Day Type Explanation -->
+            <section class="day-type-card" id="dayTypeCard">
+                <div class="day-type-header">
+                    <div class="day-type-icon" id="dayTypeIcon"></div>
+                    <div class="day-type-title" id="dayTypeTitle">Loading...</div>
+                </div>
+                <div class="day-type-explanation" id="dayTypeExplanation"></div>
+                <div class="week-schedule" id="weekSchedule"></div>
             </section>
 
             <!-- Current & Next Cards -->
@@ -1278,6 +1428,22 @@
         // Odd weeks: Only Tuesday (2)
         // ============================================
 
+        // DEBUG MODE - URL Parameters:
+        // ?mode=work    - Force work day mode
+        // ?mode=school  - Force school day mode  
+        // ?mode=weekend - Force weekend mode
+        // ?week=odd     - Force odd week
+        // ?week=even    - Force even week
+        // Example: ?mode=work or ?mode=weekend&week=odd
+
+        function getDebugParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                mode: params.get('mode'),
+                week: params.get('week')
+            };
+        }
+
         function getWeekNumber(date) {
             const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
             const dayNum = d.getUTCDay() || 7;
@@ -1287,46 +1453,63 @@
         }
 
         function isEvenWeek() {
+            const debug = getDebugParams();
+            if (debug.week === 'even') return true;
+            if (debug.week === 'odd') return false;
+            
             const weekNum = getWeekNumber(new Date());
             return weekNum % 2 === 0;
         }
 
         function isSchoolDay() {
+            const debug = getDebugParams();
+            if (debug.mode === 'school') return true;
+            if (debug.mode === 'work' || debug.mode === 'weekend') return false;
+            
             const today = new Date();
-            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, 2 = Tuesday, etc.
+            const dayOfWeek = today.getDay();
             const evenWeek = isEvenWeek();
 
-            // Even weeks: Monday (1) and Tuesday (2) are school days
-            // Odd weeks: Only Tuesday (2) is a school day
             if (evenWeek) {
-                return dayOfWeek === 1 || dayOfWeek === 2; // Monday or Tuesday
+                return dayOfWeek === 1 || dayOfWeek === 2;
             } else {
-                return dayOfWeek === 2; // Only Tuesday
+                return dayOfWeek === 2;
             }
         }
 
         function isWorkDay() {
-            // Work days are weekdays that are NOT school days
+            const debug = getDebugParams();
+            if (debug.mode === 'work') return true;
+            if (debug.mode === 'school' || debug.mode === 'weekend') return false;
+            
             const today = new Date();
             const dayOfWeek = today.getDay();
             
-            // Weekend is never a work day
             if (dayOfWeek === 0 || dayOfWeek === 6) {
                 return false;
             }
             
-            // If it's not a school day but it's a weekday, it's a work day
             return !isSchoolDay();
         }
 
+        function isWeekend() {
+            const debug = getDebugParams();
+            if (debug.mode === 'weekend') return true;
+            if (debug.mode === 'work' || debug.mode === 'school') return false;
+            
+            const today = new Date();
+            return today.getDay() === 0 || today.getDay() === 6;
+        }
+
         function getDayTypeInfo() {
+            const debug = getDebugParams();
             const today = new Date();
             const dayOfWeek = today.getDay();
             const evenWeek = isEvenWeek();
             const weekNum = getWeekNumber(today);
             const schoolDay = isSchoolDay();
             const workDay = isWorkDay();
-            const weekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const weekend = isWeekend();
 
             return {
                 isSchoolDay: schoolDay,
@@ -1334,7 +1517,9 @@
                 isWeekend: weekend,
                 isEvenWeek: evenWeek,
                 weekNumber: weekNum,
-                dayOfWeek: dayOfWeek
+                dayOfWeek: dayOfWeek,
+                debugMode: debug.mode || debug.week ? true : false,
+                debugParams: debug
             };
         }
 
@@ -1380,15 +1565,31 @@
         }
 
         function getFeierabendTime(lessons) {
+            const dayInfo = getDayTypeInfo();
+            
+            // Weekend - no Feierabend needed, already free
+            if (dayInfo.isWeekend) {
+                return getCurrentMinutes(); // Already Feierabend!
+            }
+            
+            // Work day (not a school day) - always 16:00
+            if (dayInfo.isWorkDay) {
+                return WORK_DAY_END;
+            }
+            
+            // School day - check lessons
             if (!lessons || lessons.length === 0) {
+                // School day but no lessons loaded - default to work end
                 return WORK_DAY_END;
             }
 
             const nonCancelled = lessons.filter(l => !l.cancelled);
             if (nonCancelled.length === 0) {
+                // All lessons cancelled - it's effectively a work day
                 return WORK_DAY_END;
             }
 
+            // School day with lessons - Feierabend is after last non-cancelled lesson
             return Math.max(...nonCancelled.map(l => l.endMin));
         }
 
@@ -1523,13 +1724,24 @@
             `).join('');
         }
 
-        function updateScheduleTimeline(lessons, currentMin) {
+        function updateScheduleTimeline(lessons, currentMin, dayInfo) {
             const timeline = document.getElementById('scheduleTimeline');
             const countEl = document.getElementById('lessonCount');
             
             if (!lessons || lessons.length === 0) {
-                timeline.innerHTML = '<div class="timeline-line"></div><div class="no-lesson"><div class="no-lesson-icon">&#128564;</div>No lessons scheduled today</div>';
-                countEl.textContent = '0 lessons';
+                let message = 'No lessons scheduled today';
+                let icon = '&#128564;'; // Sleeping face
+                
+                if (dayInfo && dayInfo.isWeekend) {
+                    message = 'Weekend! Enjoy your time off!';
+                    icon = '&#127881;'; // Party popper
+                } else if (dayInfo && dayInfo.isWorkDay) {
+                    message = 'Work day - No school today';
+                    icon = '&#128188;'; // Briefcase
+                }
+                
+                timeline.innerHTML = `<div class="timeline-line"></div><div class="no-lesson"><div class="no-lesson-icon">${icon}</div>${message}</div>`;
+                countEl.textContent = dayInfo && dayInfo.isWorkDay ? 'Work day' : '0 lessons';
                 return;
             }
 
@@ -1561,15 +1773,99 @@
             }).join('');
         }
 
-        function updateWorkModeIndicator(isWorkDay) {
-            const badge = document.getElementById('workModeBadge');
+        function updateDayTypeCard() {
+            const dayInfo = getDayTypeInfo();
+            const iconEl = document.getElementById('dayTypeIcon');
+            const titleEl = document.getElementById('dayTypeTitle');
+            const explanationEl = document.getElementById('dayTypeExplanation');
+            const scheduleEl = document.getElementById('weekSchedule');
+            
+            const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            const today = dayInfo.dayOfWeek;
+            
+            // Set icon and title based on day type
+            if (dayInfo.isWeekend) {
+                iconEl.className = 'day-type-icon weekend';
+                iconEl.textContent = '&#127881;';
+                titleEl.textContent = 'Weekend Mode';
+                explanationEl.innerHTML = `It&apos;s the <strong>weekend</strong>! No school, no work. Enjoy your freedom!`;
+            } else if (dayInfo.isSchoolDay) {
+                iconEl.className = 'day-type-icon school';
+                iconEl.textContent = '&#128218;';
+                titleEl.textContent = 'School Day';
+                if (dayInfo.isEvenWeek) {
+                    explanationEl.innerHTML = `<strong>Week ${dayInfo.weekNumber}</strong> is an <strong>even week</strong>, so school is on <strong>Monday and Tuesday</strong>.`;
+                } else {
+                    explanationEl.innerHTML = `<strong>Week ${dayInfo.weekNumber}</strong> is an <strong>odd week</strong>, so school is <strong>only on Tuesday</strong>.`;
+                }
+            } else if (dayInfo.isWorkDay) {
+                iconEl.className = 'day-type-icon work';
+                iconEl.textContent = '&#128188;';
+                titleEl.textContent = 'Work Day';
+                if (dayInfo.isEvenWeek) {
+                    explanationEl.innerHTML = `<strong>Week ${dayInfo.weekNumber}</strong> is an <strong>even week</strong>. Today is a work day (school only Mon/Tue). Feierabend at <strong>16:00</strong>!`;
+                } else {
+                    explanationEl.innerHTML = `<strong>Week ${dayInfo.weekNumber}</strong> is an <strong>odd week</strong>. Today is a work day (school only Tue). Feierabend at <strong>16:00</strong>!`;
+                }
+            }
+            
+            // Generate week schedule visualization
+            let scheduleHtml = '';
+            for (let i = 0; i < 7; i++) {
+                let dayClass = '';
+                const isToday = i === today;
+                
+                if (i === 0 || i === 6) {
+                    dayClass = 'weekend';
+                } else if (dayInfo.isEvenWeek && (i === 1 || i === 2)) {
+                    dayClass = 'school';
+                } else if (!dayInfo.isEvenWeek && i === 2) {
+                    dayClass = 'school';
+                } else if (i >= 1 && i <= 5) {
+                    dayClass = 'work';
+                }
+                
+                scheduleHtml += `<div class="week-day ${dayClass} ${isToday ? 'today' : ''}">${days[i]}${isToday ? ' (Today)' : ''}</div>`;
+            }
+            scheduleEl.innerHTML = scheduleHtml;
+        }
+
+        function updateDayModeIndicator(hasLessons) {
+            const workBadge = document.getElementById('workModeBadge');
+            const schoolBadge = document.getElementById('schoolModeBadge');
+            const weekIndicator = document.getElementById('weekIndicator');
             const label = document.getElementById('timerLabel');
             
-            if (isWorkDay) {
-                badge.style.display = 'inline-flex';
+            const dayInfo = getDayTypeInfo();
+            
+            // Update week indicator
+            weekIndicator.style.display = 'inline-flex';
+            weekIndicator.textContent = `Week ${dayInfo.weekNumber} (${dayInfo.isEvenWeek ? 'Even' : 'Odd'})`;
+            
+            if (dayInfo.isWeekend) {
+                // Weekend
+                workBadge.style.display = 'none';
+                schoolBadge.style.display = 'none';
+                label.textContent = 'ENJOY YOUR WEEKEND';
+            } else if (dayInfo.isSchoolDay && hasLessons) {
+                // School day with lessons
+                workBadge.style.display = 'none';
+                schoolBadge.style.display = 'inline-flex';
+                label.textContent = 'TIME UNTIL FEIERABEND';
+            } else if (dayInfo.isSchoolDay && !hasLessons) {
+                // School day but no lessons (maybe holiday or API empty)
+                workBadge.style.display = 'inline-flex';
+                schoolBadge.style.display = 'none';
+                label.textContent = 'TIME UNTIL WORK ENDS (NO LESSONS)';
+            } else if (dayInfo.isWorkDay) {
+                // Regular work day
+                workBadge.style.display = 'inline-flex';
+                schoolBadge.style.display = 'none';
                 label.textContent = 'TIME UNTIL WORK ENDS';
             } else {
-                badge.style.display = 'none';
+                // Fallback
+                workBadge.style.display = 'none';
+                schoolBadge.style.display = 'none';
                 label.textContent = 'TIME UNTIL FEIERABEND';
             }
         }
@@ -1709,7 +2005,8 @@
             const currentMin = getCurrentMinutes();
             const lessons = timetableData.lessons || [];
             const nonCancelledLessons = lessons.filter(l => !l.cancelled);
-            const isWorkDay = nonCancelledLessons.length === 0;
+            const hasLessons = nonCancelledLessons.length > 0;
+            const dayInfo = getDayTypeInfo();
 
             const feierabendMin = getFeierabendTime(lessons);
             const currentLesson = getCurrentLesson(lessons, currentMin);
@@ -1722,15 +2019,30 @@
             updateCurrentLessonCard(currentLesson, currentMin);
             updateNextLessonCard(nextLesson);
             updateCancelledSection(cancelled);
-            updateScheduleTimeline(lessons, currentMin);
-            updateWorkModeIndicator(isWorkDay);
+            updateScheduleTimeline(lessons, currentMin, dayInfo);
+            updateDayModeIndicator(hasLessons);
+            updateDayTypeCard();
         }
 
         // ============================================
         // INITIALIZATION
         // ============================================
 
+        function initDebugBanner() {
+            const debug = getDebugParams();
+            if (debug.mode || debug.week) {
+                document.body.classList.add('debug-mode');
+                document.getElementById('debugBanner').style.display = 'block';
+                
+                const parts = [];
+                if (debug.mode) parts.push(`mode=${debug.mode}`);
+                if (debug.week) parts.push(`week=${debug.week}`);
+                document.getElementById('debugInfo').textContent = parts.join(' | ');
+            }
+        }
+
         function init() {
+            initDebugBanner();
             fetchTimetable();
             
             // Update every second
