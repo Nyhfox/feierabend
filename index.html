@@ -1,42 +1,10 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>FEIERABEND SYSTEM</title>
-
-<style>
-body{
-  margin:0;
-  height:100vh;
-  background:#050510;
-  color:white;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  font-family:system-ui;
-}
-
-#title{font-size:1.5rem; opacity:.8;}
-#timer{font-size:4rem; font-family:monospace; font-weight:900;}
-</style>
-</head>
-
-<body>
-
-<div>
-  <div id="title">Loading...</div>
-  <div id="timer">--:--:--</div>
-</div>
-
 <script>
 
 const API_URL = "https://backenduntis.onrender.com/api/timetable";
 
 let cache = null;
 
-// ---------------- FETCH every 30s ONLY ----------------
+// ---------------- FETCH (slow, stable) ----------------
 async function load(){
   try {
     cache = await fetch(API_URL).then(r => r.json());
@@ -48,7 +16,12 @@ async function load(){
 setInterval(load, 30000);
 load();
 
-// ---------------- FORMAT ----------------
+// ---------------- TIME ----------------
+function nowMinutes(){
+  const d = new Date();
+  return d.getHours()*60 + d.getMinutes();
+}
+
 function fmt(ms){
   const s = Math.max(0, Math.floor(ms/1000));
   return String(Math.floor(s/3600)).padStart(2,"0") + ":" +
@@ -56,43 +29,64 @@ function fmt(ms){
          String(s%60).padStart(2,"0");
 }
 
-// ---------------- UI UPDATE (every second) ----------------
+// ---------------- CORE LOGIC ----------------
+function getCurrentLesson(now, lessons){
+  return lessons.find(l => now >= l.startMin && now < l.endMin);
+}
+
+function getNextLesson(now, lessons){
+  return lessons.find(l => l.startMin > now);
+}
+
+// ---------------- UI LOOP ----------------
 function tick(){
 
   if(!cache) return;
 
-  const now = cache.now;
-  const next = cache.next;
+  const now = nowMinutes();
+  const lessons = cache.lessons;
+
+  const current = getCurrentLesson(now, lessons);
+  const next = getNextLesson(now, lessons);
 
   const endOfDay = 16 * 60;
 
   const title = document.getElementById("title");
   const timer = document.getElementById("timer");
 
-  // real current time (fix drift)
-  const realNow = new Date();
-  const currentMin = realNow.getHours()*60 + realNow.getMinutes();
+  // ---------------- CURRENT LESSON ----------------
+  if(current){
+    title.innerText =
+      `NOW: ${current.subject} | Room ${current.room}` +
+      (current.cancelled ? " ❌ CANCELLED" : "");
 
-  if(!next){
-    const free = (endOfDay - currentMin) * 60000;
+  } else if(next){
+    title.innerText =
+      `NEXT: ${next.subject} | Room ${next.room}` +
+      (next.cancelled ? " ❌ CANCELLED" : "");
 
+  } else {
     title.innerText = "NO MORE LESSONS 🎉";
-    timer.innerText = fmt(free);
-    return;
   }
 
-  const toNext = (next.startMin - currentMin) * 60000;
-  const toFree = (endOfDay - currentMin) * 60000;
+  // ---------------- NEXT LESSON TIMER ----------------
+  if(next){
+    const toNext = (next.startMin - now) * 60000;
 
-  title.innerText = `Next: ${next.subject} | Room ${next.room}`;
+    const toFree = (endOfDay - now) * 60000;
 
-  timer.innerHTML =
-    `⏳ Next: ${fmt(toNext)}<br>` +
-    `🏁 Freedom: ${fmt(toFree)}`;
+    timer.innerHTML =
+      `⏳ Next lesson: ${fmt(toNext)}<br>` +
+      `🏁 Feierabend: ${fmt(toFree)}`;
+
+  } else {
+    const free = (endOfDay - now) * 60000;
+
+    timer.innerHTML =
+      `🏁 FREE TIME: ${fmt(free)}`;
+  }
 }
 
 setInterval(tick, 1000);
-</script>
 
-</body>
-</html>
+</script>
