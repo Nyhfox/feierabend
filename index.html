@@ -19,7 +19,7 @@ body{
 }
 
 #title{
-  font-size:1.6rem;
+  font-size:1.4rem;
   margin-bottom:10px;
   opacity:0.9;
 }
@@ -57,7 +57,7 @@ async function load(){
 setInterval(load, 30000);
 load();
 
-// ---------------- TIME (WITH SECONDS) ----------------
+// ---------------- TIME ----------------
 function nowMinutes(){
   const d = new Date();
   return d.getHours()*60 + d.getMinutes() + d.getSeconds()/60;
@@ -80,18 +80,24 @@ function getCurrent(now, lessons){
   return lessons.find(l => now >= l.startMin && now < l.endMin);
 }
 
+// ONLY NON-CANCELLED NEXT LESSON
 function getNext(now, lessons){
-  return lessons.find(l => l.startMin > now);
+  return lessons.find(l => l.startMin > now && !l.cancelled);
 }
 
-// ---------------- FEIERABEND (FIXED) ----------------
+// ALL CANCELLED LESSONS (ALWAYS DISPLAYED)
+function getCancelled(lessons){
+  return lessons.filter(l => l.cancelled);
+}
+
+// ---------------- FEIERABEND ----------------
 function getFeierabend(lessons){
 
   if(!lessons || lessons.length === 0){
     return 16 * 60;
   }
 
-  const sorted = [...lessons].sort((a,b) => a.endMin - b.endMin);
+  const sorted = [...lessons].sort((a,b)=>a.endMin-b.endMin);
 
   let lastValid = null;
 
@@ -108,13 +114,7 @@ function getFeierabend(lessons){
   return lastValid.endMin;
 }
 
-// ---------------- LAST LESSON INFO ----------------
-function getLastLesson(lessons){
-  if(!lessons || lessons.length === 0) return null;
-  return [...lessons].sort((a,b)=>a.endMin-b.endMin).pop();
-}
-
-// ---------------- MAIN LOOP ----------------
+// ---------------- MAIN ----------------
 function tick(){
 
   if(!cache || !cache.lessons) return;
@@ -124,6 +124,7 @@ function tick(){
 
   const current = getCurrent(now, lessons);
   const next = getNext(now, lessons);
+  const cancelled = getCancelled(lessons);
 
   const feier = getFeierabend(lessons);
 
@@ -132,24 +133,28 @@ function tick(){
 
   if(!title || !timer) return;
 
+  // ---------------- CANCELLED DISPLAY ----------------
+  let cancelledText = "";
+  if(cancelled.length > 0){
+    cancelledText =
+      " ❌ CANCELLED: " +
+      cancelled.map(c => `${c.subject}@${c.room}`).join(", ");
+  }
+
   // ---------------- TITLE ----------------
   if(current){
     title.innerText =
       `NOW: ${current.subject} | Room ${current.room}` +
-      (current.cancelled ? " ❌ CANCELLED" : "");
+      (current.cancelled ? " ❌ CANCELLED" : "") +
+      cancelledText;
 
   } else if(next){
     title.innerText =
       `NEXT: ${next.subject} | Room ${next.room}` +
-      (next.cancelled ? " ❌ CANCELLED" : "");
+      cancelledText;
 
   } else {
-    const last = getLastLesson(lessons);
-
-    title.innerText =
-      last && last.cancelled
-        ? "LAST LESSON WAS CANCELLED ❌"
-        : "NO MORE LESSONS 🎉";
+    title.innerText = "NO MORE LESSONS 🎉" + cancelledText;
   }
 
   // ---------------- TIMER ----------------
