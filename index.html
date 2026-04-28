@@ -843,6 +843,65 @@
             100% { transform: scale(40); opacity: 0; }
         }
 
+        /* Replacement Lesson Styles */
+        .schedule-item.replacement {
+            border-left-color: var(--accent-secondary);
+        }
+
+        .schedule-item.replacement .schedule-dot {
+            background: var(--accent-secondary);
+            box-shadow: 0 0 10px var(--accent-secondary);
+        }
+
+        .replacement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            background: rgba(123, 44, 191, 0.2);
+            border: 1px solid rgba(123, 44, 191, 0.4);
+            color: var(--accent-secondary);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            animation: replacementPulse 2s infinite;
+        }
+
+        @keyframes replacementPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(123, 44, 191, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(123, 44, 191, 0.6); }
+        }
+
+        .cancelled-item.has-replacement {
+            position: relative;
+        }
+
+        .cancelled-item.has-replacement::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-secondary), transparent);
+        }
+
+        .replacement-info {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.25rem;
+            font-size: 0.7rem;
+            color: var(--accent-secondary);
+        }
+
+        .replacement-arrow {
+            color: var(--accent-secondary);
+            font-weight: bold;
+        }
+
         /* Work Day Mode */
         .work-mode-badge {
             display: inline-flex;
@@ -1608,6 +1667,43 @@
             return lessons.filter(l => l.cancelled);
         }
 
+        // Check if two time ranges overlap
+        function timesOverlap(start1, end1, start2, end2) {
+            return start1 < end2 && start2 < end1;
+        }
+
+        // Find replacement lessons - non-cancelled lessons that overlap with cancelled ones
+        function findReplacementLessons(lessons) {
+            if (!lessons) return { replacements: new Map(), cancelledWithReplacements: new Map() };
+            
+            const cancelled = lessons.filter(l => l.cancelled);
+            const active = lessons.filter(l => !l.cancelled);
+            const replacements = new Map(); // Maps active lesson index to cancelled lesson it replaces
+            const cancelledWithReplacements = new Map(); // Maps cancelled lesson to its replacement
+            
+            cancelled.forEach((cancelledLesson, cIdx) => {
+                active.forEach((activeLesson, aIdx) => {
+                    // Check if the active lesson overlaps with the cancelled one
+                    if (timesOverlap(activeLesson.startMin, activeLesson.endMin, cancelledLesson.startMin, cancelledLesson.endMin)) {
+                        // Find original index in lessons array
+                        const originalActiveIdx = lessons.findIndex(l => l === activeLesson);
+                        const originalCancelledIdx = lessons.findIndex(l => l === cancelledLesson);
+                        
+                        replacements.set(originalActiveIdx, {
+                            replacesLesson: cancelledLesson,
+                            cancelledIdx: originalCancelledIdx
+                        });
+                        cancelledWithReplacements.set(originalCancelledIdx, {
+                            replacedBy: activeLesson,
+                            activeIdx: originalActiveIdx
+                        });
+                    }
+                });
+            });
+            
+            return { replacements, cancelledWithReplacements };
+        }
+
         // ============================================
         // UI UPDATE FUNCTIONS
         // ============================================
@@ -1703,7 +1799,7 @@
             }
         }
 
-        function updateCancelledSection(cancelled) {
+        function updateCancelledSection(cancelled, cancelledWithReplacements) {
             const section = document.getElementById('cancelledSection');
             const countEl = document.getElementById('cancelledCount');
             const listEl = document.getElementById('cancelledList');
@@ -1716,15 +1812,28 @@
             section.style.display = 'block';
             countEl.textContent = `${cancelled.length} lesson${cancelled.length > 1 ? 's' : ''} cancelled`;
             
-            listEl.innerHTML = cancelled.map(l => `
-                <div class="cancelled-item">
-                    <span class="cancelled-subject">${l.subject}</span>
-                    <span class="cancelled-time">${minutesToTime(l.startMin)} - ${minutesToTime(l.endMin)}</span>
-                </div>
-            `).join('');
+            listEl.innerHTML = cancelled.map((l, idx) => {
+                const lessons = timetableData?.lessons || [];
+                const originalIdx = lessons.findIndex(lesson => lesson === l);
+                const replacementInfo = cancelledWithReplacements.get(originalIdx);
+                const hasReplacement = !!replacementInfo;
+                
+                return `
+                    <div class="cancelled-item ${hasReplacement ? 'has-replacement' : ''}">
+                        <span class="cancelled-subject">${l.subject}</span>
+                        <span class="cancelled-time">${minutesToTime(l.startMin)} - ${minutesToTime(l.endMin)}</span>
+                        ${hasReplacement ? `
+                            <div class="replacement-info">
+                                <span class="replacement-arrow">→</span>
+                                <span>Replaced by <strong>${replacementInfo.replacedBy.subject}</strong> in Room ${replacementInfo.replacedBy.room}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
         }
 
-        function updateScheduleTimeline(lessons, currentMin, dayInfo) {
+        function updateScheduleTimeline(lessons, currentMin, dayInfo, replacements) {
             const timeline = document.getElementById('scheduleTimeline');
             const countEl = document.getElementById('lessonCount');
             
@@ -1747,10 +1856,20 @@
 
             countEl.textContent = `${lessons.length} lesson${lessons.length > 1 ? 's' : ''}`;
             
-            timeline.innerHTML = '<div class="timeline-line"></div>' + lessons.map(lesson => {
+            timeline.innerHTML = '<div class="timeline-line"></div>' + lessons.map((lesson, idx) => {
                 let status = '';
+                const isReplacement = replacements.has(idx);
+                const replacementInfo = replacements.get(idx);
+                
                 if (lesson.cancelled) {
                     status = 'cancelled';
+                } else if (isReplacement) {
+                    status = 'replacement';
+                    if (currentMin >= lesson.startMin && currentMin < lesson.endMin) {
+                        status += ' active';
+                    } else if (currentMin >= lesson.endMin) {
+                        status += ' past';
+                    }
                 } else if (currentMin >= lesson.startMin && currentMin < lesson.endMin) {
                     status = 'active';
                 } else if (currentMin >= lesson.endMin) {
@@ -1766,6 +1885,7 @@
                             <div class="schedule-meta">
                                 <span>Room ${lesson.room}</span>
                                 ${lesson.cancelled ? '<span style="color: var(--accent-danger);">CANCELLED</span>' : ''}
+                                ${isReplacement ? `<span class="replacement-badge">REPLACES ${replacementInfo.replacesLesson.subject}</span>` : ''}
                             </div>
                         </div>
                     </div>
@@ -2008,6 +2128,9 @@
             const hasLessons = nonCancelledLessons.length > 0;
             const dayInfo = getDayTypeInfo();
 
+            // Find replacement lessons
+            const { replacements, cancelledWithReplacements } = findReplacementLessons(lessons);
+
             const feierabendMin = getFeierabendTime(lessons);
             const currentLesson = getCurrentLesson(lessons, currentMin);
             const nextLesson = getNextLesson(lessons, currentMin);
@@ -2018,8 +2141,8 @@
             updateDayProgress(feierabendMin);
             updateCurrentLessonCard(currentLesson, currentMin);
             updateNextLessonCard(nextLesson);
-            updateCancelledSection(cancelled);
-            updateScheduleTimeline(lessons, currentMin, dayInfo);
+            updateCancelledSection(cancelled, cancelledWithReplacements);
+            updateScheduleTimeline(lessons, currentMin, dayInfo, replacements);
             updateDayModeIndicator(hasLessons);
             updateDayTypeCard();
         }
