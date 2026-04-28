@@ -1211,6 +1211,394 @@
             100% { transform: translate(0); }
         }
 
+        /* Statistics Panel */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .stat-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+        }
+
+        /* Motivational Quote */
+        .quote-section {
+            background: linear-gradient(135deg, rgba(123, 44, 191, 0.1), rgba(0, 245, 212, 0.1));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.5;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            font-style: italic;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .quote-vibe {
+            margin-top: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* Mascot */
+        .mascot-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .mascot-container:hover {
+            transform: scale(1.1);
+        }
+
+        .mascot {
+            width: 80px;
+            height: 80px;
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            box-shadow: var(--glow-cyan);
+            position: relative;
+        }
+
+        .mascot-speech {
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--accent-primary);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            margin-bottom: 0.5rem;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+
+        .mascot-speech::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            right: 20px;
+            border: 8px solid transparent;
+            border-top-color: var(--accent-primary);
+        }
+
+        .mascot-container:hover .mascot-speech {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .mascot.tired {
+            border-color: var(--accent-warning);
+            box-shadow: 0 0 20px rgba(255, 107, 53, 0.3);
+        }
+
+        .mascot.dying {
+            border-color: var(--accent-danger);
+            box-shadow: 0 0 20px rgba(239, 35, 60, 0.3);
+            animation: mascotShake 0.5s infinite;
+        }
+
+        .mascot.happy {
+            border-color: var(--accent-success);
+            box-shadow: 0 0 30px rgba(6, 214, 160, 0.5);
+            animation: mascotBounce 0.5s infinite;
+        }
+
+        @keyframes mascotShake {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        @keyframes mascotBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Milestone Toast */
+        .milestone-toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            border-radius: 20px;
+            padding: 2rem 3rem;
+            text-align: center;
+            z-index: 9999;
+            box-shadow: var(--glow-cyan), 0 20px 60px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .milestone-toast.show {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .milestone-emoji {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: milestoneEmoji 0.5s ease infinite;
+        }
+
+        @keyframes milestoneEmoji {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.2) rotate(-10deg); }
+            75% { transform: scale(1.2) rotate(10deg); }
+        }
+
+        .milestone-text {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+        }
+
+        .milestone-subtext {
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        /* Excuse Generator */
+        .excuse-section {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 107, 53, 0.3);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .excuse-btn {
+            background: linear-gradient(135deg, var(--accent-warning), var(--accent-danger));
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .excuse-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 107, 53, 0.5);
+        }
+
+        .excuse-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(255, 107, 53, 0.1);
+            border-radius: 8px;
+            font-style: italic;
+            color: var(--text-secondary);
+            display: none;
+        }
+
+        .excuse-result.show {
+            display: block;
+            animation: excuseIn 0.3s ease;
+        }
+
+        @keyframes excuseIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Video Switcher */
+        .video-switcher {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .video-btn {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .video-btn.active {
+            background: var(--accent-primary);
+            color: var(--bg-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .video-btn:hover:not(.active) {
+            border-color: var(--accent-primary);
+        }
+
+        /* Sound Toggle */
+        .sound-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sound-toggle:hover {
+            border-color: var(--accent-primary);
+            box-shadow: var(--glow-cyan);
+        }
+
+        .sound-toggle svg {
+            width: 24px;
+            height: 24px;
+            color: var(--text-secondary);
+        }
+
+        .sound-toggle.enabled svg {
+            color: var(--accent-primary);
+        }
+
+        /* Break Timer */
+        .break-timer {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(6, 214, 160, 0.1);
+            border: 1px solid rgba(6, 214, 160, 0.3);
+            border-radius: 8px;
+            margin-top: 1rem;
+            justify-content: center;
+        }
+
+        .break-timer-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .break-timer-value {
+            font-family: 'Orbitron', monospace;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+
+        /* Circular Progress */
+        .circular-progress {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto 1rem;
+        }
+
+        .circular-progress svg {
+            transform: rotate(-90deg);
+        }
+
+        .circular-progress circle {
+            fill: none;
+            stroke-width: 8;
+        }
+
+        .circular-progress .bg {
+            stroke: var(--bg-secondary);
+        }
+
+        .circular-progress .progress {
+            stroke: var(--accent-primary);
+            stroke-linecap: round;
+            transition: stroke-dashoffset 1s linear;
+        }
+
+        .circular-progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .circular-progress-value {
+            font-family: 'Orbitron', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+        }
+
+        .circular-progress-label {
+            font-size: 0.6rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
         /* Debug Mode Banner */
         .debug-banner {
             position: fixed;
@@ -1252,6 +1640,28 @@
     <!-- Debug Mode Banner -->
     <div class="debug-banner" id="debugBanner" style="display: none;">
         DEBUG MODE ACTIVE <code id="debugInfo"></code>
+    </div>
+
+    <!-- Sound Toggle -->
+    <button class="sound-toggle" id="soundToggle" title="Toggle Feierabend Sound">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07" id="soundWave1"></path>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14" id="soundWave2"></path>
+        </svg>
+    </button>
+
+    <!-- Mascot -->
+    <div class="mascot-container" id="mascotContainer">
+        <div class="mascot-speech" id="mascotSpeech">Stay strong!</div>
+        <div class="mascot" id="mascot">:)</div>
+    </div>
+
+    <!-- Milestone Toast -->
+    <div class="milestone-toast" id="milestoneToast">
+        <div class="milestone-emoji" id="milestoneEmoji">-</div>
+        <div class="milestone-text" id="milestoneText">MILESTONE!</div>
+        <div class="milestone-subtext" id="milestoneSubtext">Keep going!</div>
     </div>
 
     <!-- Background Effects -->
@@ -1348,6 +1758,33 @@
                 </div>
             </section>
 
+            <!-- Statistics Panel -->
+            <section class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="statHoursSurvived">0h</div>
+                    <div class="stat-label">Hours Survived</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statLessonsComplete">0%</div>
+                    <div class="stat-label">Lessons Done</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statBreaksLeft">0</div>
+                    <div class="stat-label">Breaks Left</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="statVibeCheck">Meh</div>
+                    <div class="stat-label">Vibe Check</div>
+                </div>
+            </section>
+
+            <!-- Motivational Quote -->
+            <section class="quote-section" id="quoteSection">
+                <div class="quote-icon">"</div>
+                <div class="quote-text" id="quoteText">Loading wisdom...</div>
+                <div class="quote-vibe" id="quoteVibe">LOADING</div>
+            </section>
+
             <!-- Day Type Explanation -->
             <section class="day-type-card" id="dayTypeCard">
                 <div class="day-type-header">
@@ -1427,6 +1864,12 @@
                 <div class="cancelled-list" id="cancelledList"></div>
             </section>
 
+            <!-- Excuse Generator -->
+            <section class="excuse-section">
+                <button class="excuse-btn" onclick="generateExcuse()">Generate Excuse to Leave Early</button>
+                <div class="excuse-result" id="excuseResult"></div>
+            </section>
+
             <!-- Minecraft Parkour for ADHD -->
             <section class="parkour-section">
                 <div class="parkour-header">
@@ -1437,10 +1880,11 @@
                         Background Entertainment
                         <span class="parkour-badge">ADHD Mode</span>
                     </div>
-                    <div class="parkour-subtitle">Minecraft parkour to keep you sane while waiting</div>
+                    <div class="parkour-subtitle">Brain rot content to keep you sane while waiting</div>
                 </div>
-                <div class="video-container">
+                <div class="video-container" id="videoContainer">
                     <iframe 
+                        id="videoFrame"
                         src="https://www.youtube.com/embed/n_Dv4JMiwK8?autoplay=1&mute=1&loop=1&playlist=n_Dv4JMiwK8&controls=0&showinfo=0&rel=0&modestbranding=1" 
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                         allowfullscreen>
@@ -1450,8 +1894,14 @@
                         <svg viewBox="0 0 24 24" fill="currentColor">
                             <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
                         </svg>
-                        <span>Satisfying parkour to keep your brain occupied</span>
+                        <span>Satisfying content to keep your brain occupied</span>
                     </div>
+                </div>
+                <div class="video-switcher">
+                    <button class="video-btn active" onclick="switchVideo('minecraft')">Minecraft Parkour</button>
+                    <button class="video-btn" onclick="switchVideo('subway')">Subway Surfers</button>
+                    <button class="video-btn" onclick="switchVideo('satisfying')">Satisfying</button>
+                    <button class="video-btn" onclick="switchVideo('asmr')">Slime ASMR</button>
                 </div>
             </section>
 
@@ -1480,6 +1930,80 @@
         let timetableData = null;
         let isFeierabend = false;
         let celebrationTriggered = false;
+        let soundEnabled = localStorage.getItem('soundEnabled') === 'true';
+        let milestonesTriggered = new Set(JSON.parse(localStorage.getItem('milestonesTriggered') || '[]'));
+
+        // Video options for ADHD mode
+        const videoOptions = {
+            minecraft: 'n_Dv4JMiwK8',
+            subway: 'jKcVOL_HrPU',
+            satisfying: '3_N6P78tRBM',
+            asmr: 'RQ1fhvMOlvo'
+        };
+
+        // Motivational quotes based on time remaining
+        const quotes = {
+            far: [
+                { text: "The journey of a thousand miles begins with a single step. Unfortunately, you have about 999 miles to go.", vibe: "REALISTIC" },
+                { text: "Time is an illusion. Lunchtime doubly so.", vibe: "DOUGLAS ADAMS" },
+                { text: "Every minute you spend here is a minute closer to leaving.", vibe: "MATHEMATICALLY CORRECT" },
+                { text: "Remember: somewhere in the world, someone is on vacation right now.", vibe: "JEALOUSY FUEL" },
+                { text: "Coffee: because adulting is hard and mornings are harder.", vibe: "CAFFEINATED" },
+            ],
+            medium: [
+                { text: "You're doing amazing sweetie. Well, you're doing.", vibe: "SUPPORTIVE-ISH" },
+                { text: "Halfway there! Or as I call it, still not there.", vibe: "HALF EMPTY" },
+                { text: "The light at the end of the tunnel is getting brighter. It might be a train.", vibe: "OPTIMISTIC?" },
+                { text: "Keep going! The couch misses you.", vibe: "MOTIVATIONAL" },
+                { text: "You've survived this long. What's a few more hours?", vibe: "SURVIVOR MODE" },
+            ],
+            close: [
+                { text: "SO CLOSE! You can almost taste the freedom!", vibe: "HYPED" },
+                { text: "Final stretch! Your bed is warming up for you!", vibe: "COZY ALERT" },
+                { text: "The finish line is in sight! SPRINT!", vibe: "MAXIMUM HYPE" },
+                { text: "Less than an hour! This is not a drill!", vibe: "EMERGENCY FREEDOM" },
+                { text: "Soon you'll be free. Start planning your evening NOW.", vibe: "TACTICAL" },
+            ],
+            done: [
+                { text: "FREEDOM! GO! RUN! DON'T LOOK BACK!", vibe: "LIBERATED" },
+                { text: "You did it! Time to touch grass!", vibe: "VICTORY" },
+                { text: "Feierabend achieved! +1000 happiness points!", vibe: "GAMER MOMENT" },
+            ]
+        };
+
+        // Excuses to leave early
+        const excuses = [
+            "My goldfish is having an existential crisis and needs emotional support.",
+            "I have a very important appointment with my couch.",
+            "My WiFi at home said it misses me.",
+            "I need to go home and make sure my fridge light turns off when I close it.",
+            "My cat scheduled a Zoom meeting and I can't be late.",
+            "I have to go home and update my LinkedIn to 'Professional Napper'.",
+            "The ice cream in my freezer is feeling lonely.",
+            "I promised my bed I'd be home by 5 and I never break a promise.",
+            "My houseplants are staging an intervention.",
+            "I have a doctor's appointment. The doctor is Dr. Pepper and the appointment is at my house.",
+            "My Netflix subscription is feeling neglected.",
+            "I need to go practice looking busy for tomorrow.",
+            "My sofa is experiencing separation anxiety.",
+            "I left the stove on. The imaginary stove.",
+            "Important meeting with my pillow. Very urgent.",
+            "My dog ate my will to stay here.",
+            "I have a date with my refrigerator.",
+            "My pajamas filed a missing persons report.",
+            "Critical system update required: my brain needs to restart.",
+            "The voices in my head agreed it's time to leave.",
+        ];
+
+        // Mascot states and messages
+        const mascotStates = {
+            fresh: { emoji: ':D', messages: ["Let's do this!", "New day, new grind!", "Full energy!"] },
+            normal: { emoji: ':)', messages: ["Keep going!", "You got this!", "Stay focused!"] },
+            tired: { emoji: ':|', messages: ["Halfway there...", "Coffee break?", "Almost...", "Ugh"] },
+            dying: { emoji: ':(', messages: ["Send help...", "Why...", "Pain.", "Is it over yet?"] },
+            hyped: { emoji: ':O', messages: ["SO CLOSE!", "ALMOST FREE!", "I CAN TASTE IT!"] },
+            celebration: { emoji: 'B)', messages: ["FREEDOM!", "LET'S GOOOO!", "PARTY TIME!"] }
+        };
 
         // ============================================
         // SCHOOL DAY LOGIC
@@ -1999,6 +2523,9 @@
             celebrationTriggered = true;
             isFeierabend = true;
 
+            // Play celebration sound!
+            playFeierabendSound();
+
             // Show overlay
             const overlay = document.getElementById('celebrationOverlay');
             overlay.classList.add('active');
@@ -2145,11 +2672,239 @@
             updateScheduleTimeline(lessons, currentMin, dayInfo, replacements);
             updateDayModeIndicator(hasLessons);
             updateDayTypeCard();
+            
+            // New features
+            const minutesLeft = feierabendMin - currentMin;
+            const totalMinutes = feierabendMin - DAY_START;
+            updateQuote(minutesLeft);
+            updateMascot(minutesLeft, totalMinutes);
+            updateStats(lessons, currentMin, feierabendMin);
+            checkMilestones(minutesLeft);
         }
 
         // ============================================
         // INITIALIZATION
         // ============================================
+
+        // ============================================
+        // NEW FEATURE FUNCTIONS
+        // ============================================
+
+        function switchVideo(type) {
+            const frame = document.getElementById('videoFrame');
+            const videoId = videoOptions[type];
+            frame.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&showinfo=0&rel=0&modestbranding=1`;
+            
+            document.querySelectorAll('.video-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+
+        function generateExcuse() {
+            const result = document.getElementById('excuseResult');
+            const randomExcuse = excuses[Math.floor(Math.random() * excuses.length)];
+            result.textContent = `"${randomExcuse}"`;
+            result.classList.add('show');
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            localStorage.setItem('soundEnabled', soundEnabled);
+            updateSoundToggle();
+        }
+
+        function updateSoundToggle() {
+            const toggle = document.getElementById('soundToggle');
+            const wave1 = document.getElementById('soundWave1');
+            const wave2 = document.getElementById('soundWave2');
+            
+            if (soundEnabled) {
+                toggle.classList.add('enabled');
+                wave1.style.opacity = '1';
+                wave2.style.opacity = '1';
+            } else {
+                toggle.classList.remove('enabled');
+                wave1.style.opacity = '0.3';
+                wave2.style.opacity = '0.3';
+            }
+        }
+
+        function playFeierabendSound() {
+            if (!soundEnabled) return;
+            
+            // Create a simple celebration sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+            
+            notes.forEach((freq, i) => {
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.value = freq;
+                oscillator.type = 'sine';
+                
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime + i * 0.15);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + i * 0.15 + 0.5);
+                
+                oscillator.start(audioContext.currentTime + i * 0.15);
+                oscillator.stop(audioContext.currentTime + i * 0.15 + 0.5);
+            });
+        }
+
+        function updateQuote(minutesLeft) {
+            const quoteText = document.getElementById('quoteText');
+            const quoteVibe = document.getElementById('quoteVibe');
+            
+            let category;
+            if (minutesLeft <= 0) category = 'done';
+            else if (minutesLeft <= 60) category = 'close';
+            else if (minutesLeft <= 180) category = 'medium';
+            else category = 'far';
+            
+            // Change quote every 30 seconds
+            const quoteIndex = Math.floor(Date.now() / 30000) % quotes[category].length;
+            const quote = quotes[category][quoteIndex];
+            
+            quoteText.textContent = quote.text;
+            quoteVibe.textContent = quote.vibe;
+        }
+
+        function updateMascot(minutesLeft, totalMinutes) {
+            const mascot = document.getElementById('mascot');
+            const speech = document.getElementById('mascotSpeech');
+            const progress = 1 - (minutesLeft / totalMinutes);
+            
+            let state;
+            if (minutesLeft <= 0) state = mascotStates.celebration;
+            else if (minutesLeft <= 30) state = mascotStates.hyped;
+            else if (progress > 0.75) state = mascotStates.dying;
+            else if (progress > 0.5) state = mascotStates.tired;
+            else if (progress > 0.25) state = mascotStates.normal;
+            else state = mascotStates.fresh;
+            
+            mascot.textContent = state.emoji;
+            
+            // Remove all state classes
+            mascot.classList.remove('tired', 'dying', 'happy');
+            
+            if (state === mascotStates.dying) mascot.classList.add('dying');
+            else if (state === mascotStates.tired) mascot.classList.add('tired');
+            else if (state === mascotStates.celebration || state === mascotStates.hyped) mascot.classList.add('happy');
+            
+            // Update speech on hover (changes every 10 seconds)
+            const messageIndex = Math.floor(Date.now() / 10000) % state.messages.length;
+            speech.textContent = state.messages[messageIndex];
+        }
+
+        function updateStats(lessons, currentMin, feierabendMin) {
+            const hoursSurvived = document.getElementById('statHoursSurvived');
+            const lessonsComplete = document.getElementById('statLessonsComplete');
+            const breaksLeft = document.getElementById('statBreaksLeft');
+            const vibeCheck = document.getElementById('statVibeCheck');
+            
+            // Hours survived since day start
+            const survived = Math.max(0, (currentMin - DAY_START) / 60);
+            hoursSurvived.textContent = survived.toFixed(1) + 'h';
+            
+            // Lessons completed percentage
+            if (lessons && lessons.length > 0) {
+                const completedLessons = lessons.filter(l => !l.cancelled && currentMin >= l.endMin).length;
+                const totalLessons = lessons.filter(l => !l.cancelled).length;
+                const percent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+                lessonsComplete.textContent = percent + '%';
+            } else {
+                lessonsComplete.textContent = 'N/A';
+            }
+            
+            // Breaks left (gaps between lessons)
+            if (lessons && lessons.length > 0) {
+                const sortedLessons = [...lessons].filter(l => !l.cancelled).sort((a, b) => a.startMin - b.startMin);
+                let breaks = 0;
+                for (let i = 1; i < sortedLessons.length; i++) {
+                    if (sortedLessons[i].startMin > sortedLessons[i-1].endMin && sortedLessons[i].startMin > currentMin) {
+                        breaks++;
+                    }
+                }
+                breaksLeft.textContent = breaks;
+            } else {
+                breaksLeft.textContent = '?';
+            }
+            
+            // Vibe check based on progress
+            const minutesLeft = feierabendMin - currentMin;
+            if (minutesLeft <= 0) vibeCheck.textContent = 'PEAK';
+            else if (minutesLeft <= 30) vibeCheck.textContent = 'Hyped';
+            else if (minutesLeft <= 60) vibeCheck.textContent = 'Excited';
+            else if (minutesLeft <= 120) vibeCheck.textContent = 'Hopeful';
+            else if (minutesLeft <= 240) vibeCheck.textContent = 'Mid';
+            else vibeCheck.textContent = 'Meh';
+        }
+
+        function checkMilestones(minutesLeft) {
+            const milestones = [
+                { time: 60, emoji: '1', text: '1 HOUR LEFT!', subtext: 'The final countdown begins!' },
+                { time: 30, emoji: '3', text: '30 MINUTES!', subtext: 'You can almost taste it!' },
+                { time: 15, emoji: '1', text: '15 MINUTES!', subtext: 'FREEDOM IS NEAR!' },
+                { time: 5, emoji: '5', text: '5 MINUTES!', subtext: 'START PACKING!' },
+                { time: 1, emoji: '6', text: '1 MINUTE!', subtext: 'READY... SET...' },
+            ];
+            
+            for (const milestone of milestones) {
+                const key = `milestone_${milestone.time}`;
+                if (minutesLeft <= milestone.time && minutesLeft > milestone.time - 1 && !milestonesTriggered.has(key)) {
+                    showMilestone(milestone);
+                    milestonesTriggered.add(key);
+                    localStorage.setItem('milestonesTriggered', JSON.stringify([...milestonesTriggered]));
+                    break;
+                }
+            }
+        }
+
+        function showMilestone(milestone) {
+            const toast = document.getElementById('milestoneToast');
+            const emoji = document.getElementById('milestoneEmoji');
+            const text = document.getElementById('milestoneText');
+            const subtext = document.getElementById('milestoneSubtext');
+            
+            emoji.textContent = milestone.emoji;
+            text.textContent = milestone.text;
+            subtext.textContent = milestone.subtext;
+            
+            toast.classList.add('show');
+            
+            // Play a little sound
+            if (soundEnabled) {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                oscillator.frequency.value = 880;
+                oscillator.type = 'sine';
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.3);
+            }
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function resetDailyMilestones() {
+            const today = new Date().toDateString();
+            const lastReset = localStorage.getItem('lastMilestoneReset');
+            
+            if (lastReset !== today) {
+                milestonesTriggered.clear();
+                localStorage.setItem('milestonesTriggered', '[]');
+                localStorage.setItem('lastMilestoneReset', today);
+            }
+        }
 
         function initDebugBanner() {
             const debug = getDebugParams();
@@ -2166,6 +2921,12 @@
 
         function init() {
             initDebugBanner();
+            resetDailyMilestones();
+            updateSoundToggle();
+            
+            // Sound toggle click handler
+            document.getElementById('soundToggle').addEventListener('click', toggleSound);
+            
             fetchTimetable();
             
             // Update every second
